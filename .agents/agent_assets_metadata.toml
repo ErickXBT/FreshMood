@@ -1,0 +1,26 @@
+uploads = []
+outputs = []
+
+[[generated]]
+id = "dWM8qIwqNIkZGZbmDJv1a"
+uri = "file://artifacts/freshmood/public/images/espresso.png"
+type = "image"
+title = "Espresso coffee cup"
+
+[[generated]]
+id = "mU56MAXWhKZyXwOcXKE2F"
+uri = "file://artifacts/freshmood/public/images/avocado-toast.png"
+type = "image"
+title = "Avocado toast"
+
+[[generated]]
+id = "9wAH1vut_APD26UCcdhnc"
+uri = "file://artifacts/freshmood/public/images/matcha-latte.png"
+type = "image"
+title = "Matcha latte"
+
+[[generated]]
+id = "a8yH7lDHNIegzYj2j9-qk"
+uri = "file://artifacts/freshmood/public/images/croissant.png"
+type = "image"
+title = "Croissant"

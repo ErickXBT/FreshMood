@@ -1,0 +1,31 @@
+kind = "web"
+previewPath = "/"
+title = "FreshMood"
+version = "1.0.0"
+id = "artifacts/freshmood"
+router = "path"
+
+[[integratedSkills]]
+name = "react-vite"
+version = "1.0.0"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 23784
+
+[services.development]
+run = "pnpm --filter @workspace/freshmood run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/freshmood", "run", "build" ]
+publicDir = "artifacts/freshmood/dist/public"
+serve = "static"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "23784"
+BASE_PATH = "/"

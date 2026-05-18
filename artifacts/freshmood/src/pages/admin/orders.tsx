@@ -1,0 +1,245 @@
+import { useState } from "react";
+import AdminLayout from "@/components/admin-layout";
+import { 
+  useListOrders, 
+  getListOrdersQueryKey,
+  useGetOrder,
+  getGetOrderQueryKey,
+  ListOrdersStatus,
+  Order
+} from "@workspace/api-client-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { formatDistanceToNow, parseISO, format } from "date-fns";
+import { Loader2, Search, Filter, Eye } from "lucide-react";
+import { formatRupiah } from "@/lib/format";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+
+export default function AdminOrders() {
+  const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [searchTable, setSearchTable] = useState("");
+  const [selectedOrderId, setSelectedOrderId] = useState<number | null>(null);
+
+  const { data: orders, isLoading } = useListOrders(
+    statusFilter !== "all" ? { status: statusFilter as ListOrdersStatus } : {}, 
+    { query: { queryKey: getListOrdersQueryKey(statusFilter !== "all" ? { status: statusFilter as ListOrdersStatus } : {}) } }
+  );
+
+  const { data: selectedOrder, isLoading: isLoadingOrder } = useGetOrder(
+    selectedOrderId || 0,
+    { query: { enabled: !!selectedOrderId, queryKey: getGetOrderQueryKey(selectedOrderId || 0) } }
+  );
+
+  const filteredOrders = orders?.filter(o => 
+    searchTable ? o.tableNumber.toString().includes(searchTable) : true
+  ) || [];
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'pending': return 'bg-yellow-500/20 text-yellow-700 dark:text-yellow-400';
+      case 'confirmed': return 'bg-blue-500/20 text-blue-700 dark:text-blue-400';
+      case 'preparing': return 'bg-orange-500/20 text-orange-700 dark:text-orange-400';
+      case 'ready': return 'bg-green-500/20 text-green-700 dark:text-green-400';
+      case 'completed': return 'bg-gray-500/20 text-gray-700 dark:text-gray-400';
+      case 'cancelled': return 'bg-red-500/20 text-red-700 dark:text-red-400';
+      default: return 'bg-gray-500/20 text-gray-700';
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <AdminLayout>
+        <div className="flex h-full items-center justify-center">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+      </AdminLayout>
+    );
+  }
+
+  return (
+    <AdminLayout>
+      <div className="p-8 max-w-6xl mx-auto">
+        <h1 className="text-3xl font-bold mb-8">Orders History</h1>
+
+        <div className="flex flex-col md:flex-row gap-4 mb-6">
+          <div className="relative flex-1 max-w-sm">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground w-4 h-4" />
+            <Input 
+              placeholder="Search by table number..." 
+              className="pl-9"
+              value={searchTable}
+              onChange={(e) => setSearchTable(e.target.value)}
+            />
+          </div>
+          <div className="w-full md:w-48">
+            <Select value={statusFilter} onValueChange={setStatusFilter}>
+              <SelectTrigger>
+                <SelectValue placeholder="Filter Status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Statuses</SelectItem>
+                <SelectItem value="pending">Pending</SelectItem>
+                <SelectItem value="confirmed">Confirmed</SelectItem>
+                <SelectItem value="preparing">Preparing</SelectItem>
+                <SelectItem value="ready">Ready</SelectItem>
+                <SelectItem value="completed">Completed</SelectItem>
+                <SelectItem value="cancelled">Cancelled</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+
+        <Card>
+          <CardContent className="p-0">
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm text-left">
+                <thead className="bg-muted text-muted-foreground">
+                  <tr>
+                    <th className="px-6 py-4 font-medium">Order ID</th>
+                    <th className="px-6 py-4 font-medium">Date</th>
+                    <th className="px-6 py-4 font-medium">Table & Customer</th>
+                    <th className="px-6 py-4 font-medium">Status</th>
+                    <th className="px-6 py-4 font-medium">Total</th>
+                    <th className="px-6 py-4 font-medium text-right">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-border">
+                  {filteredOrders.map(order => (
+                    <tr key={order.id} className="hover:bg-muted/50 transition-colors">
+                      <td className="px-6 py-4 font-medium">#{order.id}</td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        {format(parseISO(order.createdAt), "MMM d, HH:mm")}
+                        <div className="text-xs text-muted-foreground mt-1">
+                          {formatDistanceToNow(parseISO(order.createdAt))} ago
+                        </div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="font-bold">Table {order.tableNumber}</div>
+                        <div className="text-muted-foreground">{order.customerName}</div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <span className={`px-2.5 py-1 rounded-full text-xs font-medium capitalize ${getStatusColor(order.status)}`}>
+                          {order.status}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 font-bold">
+                        {formatRupiah(order.total)}
+                      </td>
+                      <td className="px-6 py-4 text-right">
+                        <Button variant="ghost" size="sm" onClick={() => setSelectedOrderId(order.id)}>
+                          <Eye className="w-4 h-4 mr-2" /> View
+                        </Button>
+                      </td>
+                    </tr>
+                  ))}
+                  {filteredOrders.length === 0 && (
+                    <tr>
+                      <td colSpan={6} className="px-6 py-12 text-center text-muted-foreground">
+                        No orders found
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Dialog open={!!selectedOrderId} onOpenChange={(open) => !open && setSelectedOrderId(null)}>
+          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle className="text-2xl">Order #{selectedOrder?.id}</DialogTitle>
+            </DialogHeader>
+            
+            {isLoadingOrder ? (
+              <div className="flex justify-center p-12">
+                <Loader2 className="w-8 h-8 animate-spin text-primary" />
+              </div>
+            ) : selectedOrder ? (
+              <div className="space-y-6 pt-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <p className="text-sm text-muted-foreground mb-1">Customer</p>
+                    <p className="font-medium text-lg">{selectedOrder.customerName}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground mb-1">Table</p>
+                    <p className="font-medium text-lg">{selectedOrder.tableNumber}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground mb-1">Status</p>
+                    <span className={`inline-block px-2.5 py-1 rounded-full text-xs font-medium capitalize ${getStatusColor(selectedOrder.status)}`}>
+                      {selectedOrder.status}
+                    </span>
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground mb-1">Date</p>
+                    <p className="font-medium">{format(parseISO(selectedOrder.createdAt), "PPp")}</p>
+                  </div>
+                </div>
+
+                <div className="border-t pt-4">
+                  <h3 className="font-bold mb-4">Order Items</h3>
+                  <div className="space-y-4">
+                    {selectedOrder.items?.map(item => (
+                      <div key={item.id} className="flex justify-between items-start">
+                        <div className="flex gap-3">
+                          <span className="font-bold text-primary">{item.quantity}x</span>
+                          <div>
+                            <p className="font-medium">{item.menuItemName}</p>
+                            {item.notes && <p className="text-sm text-muted-foreground italic">Note: {item.notes}</p>}
+                          </div>
+                        </div>
+                        <div className="font-medium">{formatRupiah(item.subtotal)}</div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="border-t pt-4 space-y-2">
+                  <div className="flex justify-between text-sm">
+                    <span className="text-muted-foreground">Subtotal</span>
+                    <span>{formatRupiah(selectedOrder.subtotal)}</span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-muted-foreground">Tax (10%)</span>
+                    <span>{formatRupiah(selectedOrder.tax)}</span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-muted-foreground">Service Fee (5%)</span>
+                    <span>{formatRupiah(selectedOrder.serviceFee)}</span>
+                  </div>
+                  <div className="flex justify-between font-bold text-lg pt-2 border-t mt-2">
+                    <span>Total</span>
+                    <span>{formatRupiah(selectedOrder.total)}</span>
+                  </div>
+                </div>
+
+                {selectedOrder.notes && (
+                  <div className="bg-muted p-4 rounded-lg">
+                    <h4 className="font-bold text-sm mb-1">Order Notes</h4>
+                    <p className="text-sm">{selectedOrder.notes}</p>
+                  </div>
+                )}
+              </div>
+            ) : null}
+          </DialogContent>
+        </Dialog>
+      </div>
+    </AdminLayout>
+  );
+}

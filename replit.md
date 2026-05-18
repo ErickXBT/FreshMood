@@ -1,10 +1,11 @@
-# [Project name]
+# FreshMood
 
-_Replace the heading above with the project's name, and this line with one sentence describing what this app does for users._
+FreshMood is a full-stack QR ordering and order management system for modern dine-in restaurants.
 
 ## Run & Operate
 
-- `pnpm --filter @workspace/api-server run dev` — run the API server (port 5000)
+- `pnpm --filter @workspace/api-server run dev` — run the API server (port 8080)
+- `pnpm --filter @workspace/freshmood run dev` — run the customer/admin web app (port 23784)
 - `pnpm run typecheck` — full typecheck across all packages
 - `pnpm run build` — typecheck + build all packages
 - `pnpm --filter @workspace/api-spec run codegen` — regenerate API hooks and Zod schemas from the OpenAPI spec
@@ -14,6 +15,7 @@ _Replace the heading above with the project's name, and this line with one sente
 ## Stack
 
 - pnpm workspaces, Node.js 24, TypeScript 5.9
+- Frontend: React + Vite, Tailwind CSS, Framer Motion, Shadcn UI, wouter
 - API: Express 5
 - DB: PostgreSQL + Drizzle ORM
 - Validation: Zod (`zod/v4`), `drizzle-zod`
@@ -22,15 +24,25 @@ _Replace the heading above with the project's name, and this line with one sente
 
 ## Where things live
 
-_Populate as you build — short repo map plus pointers to the source-of-truth file for DB schema, API contracts, theme files, etc._
+- `lib/api-spec/openapi.yaml` — API contract (source of truth)
+- `lib/db/src/schema/` — Drizzle schema files (categories, menu-items, tables, orders, order-items, payments)
+- `artifacts/api-server/src/routes/` — Express route handlers
+- `artifacts/freshmood/src/` — React frontend (pages: menu, checkout, order-status, admin/*)
 
 ## Architecture decisions
 
-_Populate as you build — non-obvious choices a reader couldn't infer from the code (3-5 bullets)._
+- All prices stored as `numeric(12,2)` strings in DB; parsed to float in API responses
+- Tax = 10%, service fee = 5% of subtotal — calculated server-side on order creation
+- Admin auth uses a simple token returned at login (stored in localStorage); default credentials: `admin` / `freshmood2024`
+- QR codes point to `/menu?table=<number>`; table number is read from the URL query param and stored in localStorage
+- Kitchen page auto-refreshes every 10 seconds via React Query `refetchInterval`
 
 ## Product
 
-_Describe the high-level user-facing capabilities of this app once they exist._
+- **Customer app**: Scan QR → browse menu by category → add to cart → checkout → track order status
+- **Admin dashboard**: Analytics, revenue charts, best-selling items, recent orders
+- **Kitchen display**: Real-time order queue grouped by status, one-click status advancement
+- **Menu management**: Full CRUD for categories and menu items, availability toggle, best seller badge
 
 ## User preferences
 
@@ -38,7 +50,10 @@ _Populate as you build — explicit user instructions worth remembering across s
 
 ## Gotchas
 
-_Populate as you build — sharp edges, "always run X before Y" rules._
+- Always run `pnpm --filter @workspace/api-spec run codegen` after changing `openapi.yaml`
+- Zod schema names from codegen use operation-shaped names (`CreateCategoryBody`, not `CategoryInput`)
+- Restart the API server workflow after backend code changes
+- The `@workspace/db run push` must be run after any schema changes before the server will work
 
 ## Pointers
 

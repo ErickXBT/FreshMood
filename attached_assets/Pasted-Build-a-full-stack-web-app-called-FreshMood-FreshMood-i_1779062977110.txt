@@ -1,0 +1,436 @@
+Build a full-stack web app called “FreshMood”.
+
+FreshMood is a modern restaurant QR ordering and order management system for dine-in customers.
+
+The concept:
+When customers dine in at FreshMood, every table has a unique QR code. When customers scan the QR code using their phone camera, it opens a mobile-first web application displaying the FreshMood menu.
+
+The app automatically detects and stores the table number from the QR code URL/session.
+
+Customers can:
+- Browse menu categories
+- View product images
+- See prices
+- View “Best Seller” labels
+- Add items to cart
+- Customize quantity and notes
+- Checkout directly from their phone
+- Pay using multiple payment methods
+
+Restaurant staff can:
+- Receive incoming orders in real time
+- Manage kitchen workflow
+- Update order statuses
+- Manage menu items
+- View analytics and sales reports
+
+==================================================
+MAIN FEATURES
+==================================================
+
+The app must include TWO main experiences:
+
+1. Customer QR Ordering Web App
+2. Restaurant Admin / Kitchen Dashboard
+
+==================================================
+CUSTOMER WEB APP FEATURES
+==================================================
+
+Create a beautiful modern mobile-first customer experience inspired by premium cafe ordering apps.
+
+Core Features:
+- QR code table ordering
+- Dynamic table session
+- Sticky bottom cart
+- Product detail modal
+- Search menu
+- Filter by category
+- Best seller badges
+- Dark/light theme switcher
+- Smooth animations and transitions
+- Responsive design
+- Fast loading performance
+
+==================================================
+THEME & BRANDING
+==================================================
+
+Brand Name:
+FreshMood
+
+Brand Colors:
+- Black: #000000
+- Deep Yellow: #FFCC00
+- White: #FFFFFF
+
+Theme Requirements:
+- Support BOTH Light Mode and Dark Mode
+- Theme toggle switch in navbar/header
+- Save selected theme to localStorage
+- Smooth transition between themes
+- Dark mode:
+  - black background
+  - yellow accent
+  - white text
+- Light mode:
+  - white background
+  - black text
+  - yellow accent buttons
+
+UI Style:
+- Clean modern cafe aesthetic
+- Premium minimal UI
+- Rounded cards
+- Soft shadows
+- Smooth hover animations
+- Modern typography
+- Mobile-first layout
+- Elegant spacing
+
+==================================================
+CUSTOMER MENU STRUCTURE
+==================================================
+
+IMPORTANT:
+Every single product MUST have its own image that matches the menu item.
+
+Use realistic professional food photography.
+
+==================================================
+CATEGORY 1 — FRESHFOOD
+==================================================
+
+1. Toast Ayam
+Price: 15000
+Badge: BEST SELLER
+Image:
+crispy chicken toast burger with cheese and lettuce
+
+2. Toast Tuna
+Price: 12000
+Badge: BEST SELLER
+Image:
+tuna toast sandwich with fresh vegetables
+
+3. Toast Coklat Oreo
+Price: 10000
+Badge: BEST SELLER
+Image:
+chocolate oreo toast dessert sandwich
+
+4. Toast Matcha
+Price: 10000
+Badge: BEST SELLER
+Image:
+matcha cream toast dessert
+
+5. Toast Tiramisu
+Price: 10000
+Badge: BEST SELLER
+Image:
+tiramisu cream toast dessert sandwich
+
+6. Kentang Goreng
+Price: 15000
+Image:
+crispy french fries with sauce
+
+==================================================
+CATEGORY 2 — FRESHDRINK
+==================================================
+
+1. Coklat
+Price: 12000
+Image:
+iced chocolate drink
+
+2. Red Velvet
+Price: 12000
+Image:
+iced red velvet latte
+
+3. Taro
+Price: 12000
+Image:
+iced taro drink
+
+4. Matcha
+Price: 12000
+Image:
+iced matcha latte
+
+5. Vanilla Latte
+Price: 12000
+Image:
+iced vanilla latte coffee
+
+6. Caramel Macchiato
+Price: 12000
+Badge: BEST SELLER
+Image:
+iced caramel macchiato
+
+7. Brown Sugar
+Price: 12000
+Badge: BEST SELLER
+Image:
+brown sugar milk drink
+
+8. Avocado Coklat
+Price: 10000
+Badge: BEST SELLER
+Image:
+avocado chocolate blended drink
+
+==================================================
+CATEGORY 3 — COFFEE & TEA
+==================================================
+
+1. Lemon Tea
+Price: 10000
+Image:
+iced lemon tea
+
+2. Lychee Tea
+Price: 10000
+Image:
+iced lychee tea
+
+3. Manggo Tea
+Price: 10000
+Image:
+iced mango tea
+
+4. Ice Coffee
+Price: 12000
+Image:
+iced black coffee
+
+5. Ice Kopi Gula Aren
+Price: 15000
+Image:
+iced palm sugar coffee
+
+6. Creamy Latte
+Price: 15000
+Image:
+creamy latte coffee
+
+==================================================
+CUSTOMER FLOW
+==================================================
+
+1. Customer scans QR code
+2. Opens FreshMood web app
+3. Table number automatically detected
+4. Customer browses menu
+5. Customer adds items to cart
+6. Customer reviews order summary
+7. Customer selects payment method
+8. Customer completes payment
+9. Order sent to kitchen dashboard in real time
+10. Kitchen prepares order
+11. Staff updates order status
+12. Customer sees live order tracking
+
+==================================================
+CART & CHECKOUT
+==================================================
+
+Cart Features:
+- Add/remove items
+- Quantity adjustment
+- Order notes
+- Real-time subtotal calculation
+- Tax calculation
+- Service fee calculation
+- Animated cart drawer
+
+Checkout Features:
+- Customer name input
+- Optional notes
+- Table number display
+- Order summary
+- Estimated preparation time
+
+==================================================
+PAYMENT SYSTEM
+==================================================
+
+Support multiple payment methods:
+
+1. Cash
+2. QRIS
+3. GoPay
+4. OVO
+5. DANA
+6. ShopeePay
+7. Credit/Debit Card
+
+Payment Flow:
+- Generate QR payment screen
+- Show payment success animation
+- Auto update order status after payment
+- Save payment history
+
+==================================================
+ORDER STATUS SYSTEM
+==================================================
+
+Customer can track order status in real time:
+
+- Pending
+- Confirmed
+- Preparing
+- Ready
+- Completed
+
+Use real-time updates with websockets or Supabase realtime.
+
+==================================================
+ADMIN DASHBOARD
+==================================================
+
+Create a modern admin dashboard for restaurant staff.
+
+Admin Features:
+- Login authentication
+- Dashboard analytics
+- Total sales
+- Total orders
+- Best selling products
+- Revenue charts
+- Recent transactions
+- Kitchen queue management
+
+==================================================
+MENU MANAGEMENT
+==================================================
+
+Admin can:
+- Add new menu items
+- Edit menu items
+- Delete menu items
+- Upload product images
+- Change prices
+- Toggle availability
+- Add/remove best seller labels
+
+==================================================
+KITCHEN DASHBOARD
+==================================================
+
+Kitchen dashboard must include:
+- Real-time incoming orders
+- Large easy-to-read order cards
+- Order timer
+- Order status buttons
+- Completed order history
+
+Kitchen UI:
+- Optimized for tablet screens
+- High contrast dark mode
+- Large buttons
+- Fast workflow interaction
+
+==================================================
+TECH STACK
+==================================================
+
+Use modern production-ready technologies.
+
+Frontend:
+- Next.js
+- React
+- TypeScript
+- Tailwind CSS
+- Framer Motion
+- Shadcn UI
+
+Backend:
+- Supabase or Firebase
+
+Database:
+- PostgreSQL (Supabase)
+
+Authentication:
+- Supabase Auth
+
+Realtime:
+- Supabase Realtime
+
+Storage:
+- Supabase Storage for menu images
+
+==================================================
+DATABASE TABLES
+==================================================
+
+Create database schema for:
+- users
+- tables
+- categories
+- menu_items
+- orders
+- order_items
+- payments
+- settings
+
+==================================================
+EXTRA FEATURES
+==================================================
+
+Add these premium features:
+- PWA support
+- Installable mobile web app
+- Push notifications
+- Skeleton loading animations
+- Smooth page transitions
+- Empty states
+- Error handling
+- Toast notifications
+- SEO optimization
+
+==================================================
+DESIGN REQUIREMENTS
+==================================================
+
+The design must feel like:
+- modern cafe SaaS
+- premium food ordering app
+- clean startup UI
+- smooth and elegant
+
+Avoid:
+- outdated UI
+- cluttered layout
+- generic admin templates
+
+==================================================
+FINAL REQUIREMENTS
+==================================================
+
+- Fully responsive
+- Production-ready code
+- Clean folder structure
+- Reusable components
+- Type-safe architecture
+- Modern animations
+- Beautiful UI/UX
+- Fast performance
+- Easy deployment on Vercel
+
+Generate:
+- Complete frontend
+- Complete backend
+- Database schema
+- Authentication
+- API routes
+- Admin dashboard
+- Kitchen dashboard
+- Payment flow
+- Seed data
+- Demo QR ordering flow
+
+The final result should feel like a real modern SaaS restaurant ordering platform similar to GrabFood, GoFood, or ToastTab but branded specifically for FreshMood.
