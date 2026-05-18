@@ -24,7 +24,10 @@ function Home() {
   return (
     <div className="min-h-screen w-full flex items-center justify-center bg-background text-foreground">
       <div className="text-center p-8 max-w-md">
-        <h1 className="text-4xl font-bold text-primary mb-4 tracking-tight">FreshMood</h1>
+        <div className="flex items-center justify-center gap-3 mb-4">
+          <img src="/images/logo.png" alt="FreshMood" className="h-16 w-16 object-contain" />
+          <h1 className="text-4xl font-bold text-primary tracking-tight">FreshMood</h1>
+        </div>
         <p className="mt-2 text-lg text-muted-foreground mb-8">Premium QR-based cafe ordering experience.</p>
         <div className="flex gap-4 justify-center">
           <a href="/menu?table=1" className="bg-primary text-primary-foreground px-6 py-2 rounded-full font-medium shadow-sm hover:opacity-90 transition-opacity">Open Menu</a>

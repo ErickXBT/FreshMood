@@ -69,7 +69,10 @@ export default function CustomerMenu() {
       <header className="sticky top-0 z-40 bg-background/80 backdrop-blur-md border-b border-border">
         <div className="px-4 py-4 flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-foreground">FreshMood</h1>
+            <div className="flex items-center gap-2">
+              <img src="/images/logo.png" alt="FreshMood" className="h-9 w-9 object-contain" />
+              <h1 className="text-2xl font-bold text-foreground">FreshMood</h1>
+            </div>
             {tableNumber && (
               <p className="text-sm text-primary font-medium">Table {tableNumber}</p>
             )}

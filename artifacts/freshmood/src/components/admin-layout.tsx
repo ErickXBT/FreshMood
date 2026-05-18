@@ -39,7 +39,10 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
       {/* Sidebar */}
       <aside className="w-full md:w-64 bg-card border-r border-border flex flex-col">
         <div className="p-6">
-          <h1 className="text-2xl font-bold text-primary">FreshMood</h1>
+          <div className="flex items-center gap-2">
+            <img src="/images/logo.png" alt="FreshMood" className="h-10 w-10 object-contain" />
+            <h1 className="text-2xl font-bold text-primary">FreshMood</h1>
+          </div>
           <p className="text-sm text-muted-foreground">Admin Portal</p>
         </div>
         

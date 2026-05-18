@@ -56,7 +56,10 @@ export default function AdminLogin() {
   return (
     <div className="min-h-screen bg-background flex flex-col justify-center items-center p-4">
       <div className="mb-8 text-center">
-        <h1 className="text-3xl font-bold text-primary">FreshMood</h1>
+        <div className="flex items-center justify-center gap-3 mb-1">
+          <img src="/images/logo.png" alt="FreshMood" className="h-14 w-14 object-contain" />
+          <h1 className="text-3xl font-bold text-primary">FreshMood</h1>
+        </div>
         <p className="text-muted-foreground mt-2">Admin Portal</p>
       </div>
 
