@@ -15,8 +15,8 @@ import {
 
 const router: IRouter = Router();
 
-const ADMIN_USERNAME = "admin";
-const ADMIN_PASSWORD = "freshmood2024";
+const ADMIN_USERNAME = "freshmood";
+const ADMIN_PASSWORD = "037425";
 
 router.post("/admin/login", async (req, res): Promise<void> => {
   const parsed = AdminLoginBody.safeParse(req.body);

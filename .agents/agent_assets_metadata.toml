@@ -24,3 +24,123 @@ id = "a8yH7lDHNIegzYj2j9-qk"
 uri = "file://artifacts/freshmood/public/images/croissant.png"
 type = "image"
 title = "Croissant"
+
+[[generated]]
+id = "JEkj4NEusRkGjBE4Vrcc6"
+uri = "file://attached_assets/menu/toast-ayam.png"
+type = "image"
+title = "toast ayam chicken"
+
+[[generated]]
+id = "6Unr7wmd9MDbyOIttrGi_"
+uri = "file://attached_assets/menu/toast-tuna.png"
+type = "image"
+title = "toast tuna sandwich"
+
+[[generated]]
+id = "uCdSnaHBXcrQNHS513e_e"
+uri = "file://attached_assets/menu/toast-coklat-oreo.png"
+type = "image"
+title = "chocolate oreo toast"
+
+[[generated]]
+id = "apsxBeJRKzfdO7d9ERbU_"
+uri = "file://attached_assets/menu/toast-matcha.png"
+type = "image"
+title = "matcha cream toast"
+
+[[generated]]
+id = "kNmI9q2alMnrGFku2a7w-"
+uri = "file://attached_assets/menu/toast-tiramisu.png"
+type = "image"
+title = "tiramisu toast dessert"
+
+[[generated]]
+id = "MKqpW7HblWtFf2Soo1ngB"
+uri = "file://attached_assets/menu/kentang-goreng.png"
+type = "image"
+title = "crispy french fries"
+
+[[generated]]
+id = "ZtmcqRrBxSqC1GqMJLNzw"
+uri = "file://attached_assets/menu/coklat.png"
+type = "image"
+title = "iced chocolate drink"
+
+[[generated]]
+id = "D0_VjGvbtgsyvTYSieCVd"
+uri = "file://attached_assets/menu/red-velvet.png"
+type = "image"
+title = "red velvet latte"
+
+[[generated]]
+id = "Ou6oimJQWcQa3sF8Lmskg"
+uri = "file://attached_assets/menu/taro.png"
+type = "image"
+title = "iced taro drink"
+
+[[generated]]
+id = "HaQH3NxrISg9Gy42svsDy"
+uri = "file://attached_assets/menu/matcha-drink.png"
+type = "image"
+title = "iced matcha latte"
+
+[[generated]]
+id = "JfPhjaNmHP9mDChDbH_xR"
+uri = "file://attached_assets/menu/vanilla-latte.png"
+type = "image"
+title = "vanilla latte coffee"
+
+[[generated]]
+id = "txoazJrtuZGwsewNtbPM-"
+uri = "file://attached_assets/menu/caramel-macchiato.png"
+type = "image"
+title = "caramel macchiato"
+
+[[generated]]
+id = "CV_WkI_86ZEFmo2TVeqbA"
+uri = "file://attached_assets/menu/brown-sugar.png"
+type = "image"
+title = "brown sugar milk"
+
+[[generated]]
+id = "gWIYzuDEvNJhcA4590Z69"
+uri = "file://attached_assets/menu/avocado-coklat.png"
+type = "image"
+title = "avocado chocolate drink"
+
+[[generated]]
+id = "GysB5AHxhT_ZBCyNSryYi"
+uri = "file://attached_assets/menu/lemon-tea.png"
+type = "image"
+title = "iced lemon tea"
+
+[[generated]]
+id = "KpnMjtDaxCG6Cjs9lqsJp"
+uri = "file://attached_assets/menu/lychee-tea.png"
+type = "image"
+title = "iced lychee tea"
+
+[[generated]]
+id = "2JwNq98Yu9vrS-e4h11VM"
+uri = "file://attached_assets/menu/manggo-tea.png"
+type = "image"
+title = "iced mango tea"
+
+[[generated]]
+id = "b6Hy-HcPAwnOPbfVq1Eay"
+uri = "file://attached_assets/menu/ice-coffee.png"
+type = "image"
+title = "iced black coffee"
+
+[[generated]]
+id = "gRbLFj-P2Jh5sG8Ul0y3v"
+uri = "file://attached_assets/menu/ice-kopi-gula-aren.png"
+type = "image"
+title = "palm sugar coffee"
+
+[[generated]]
+id = "n69gog_jlgTjbPL5FrZ5X"
+uri = "file://attached_assets/menu/creamy-latte.png"
+type = "image"
+title = "creamy latte coffee"
