@@ -40,14 +40,12 @@ export default function AdminMenu() {
   const [editingItem, setEditingItem] = useState<MenuItem | null>(null);
   const [editingCategory, setEditingCategory] = useState<Category | null>(null);
 
-  // Form states for item
   const [itemName, setItemName] = useState("");
   const [itemDesc, setItemDesc] = useState("");
   const [itemPrice, setItemPrice] = useState("");
   const [itemCategory, setItemCategory] = useState("");
   const [itemImage, setItemImage] = useState("");
 
-  // Form states for category
   const [catName, setCatName] = useState("");
   const [catSort, setCatSort] = useState("0");
 
@@ -104,31 +102,16 @@ export default function AdminMenu() {
       toast({ title: "Error", description: "Name, price, and category are required", variant: "destructive" });
       return;
     }
-
     try {
       if (editingItem) {
         await updateMenuItemMutation.mutateAsync({
           id: editingItem.id,
-          data: {
-            name: itemName,
-            description: itemDesc,
-            price: Number(itemPrice),
-            categoryId: Number(itemCategory),
-            imageUrl: itemImage
-          }
+          data: { name: itemName, description: itemDesc, price: Number(itemPrice), categoryId: Number(itemCategory), imageUrl: itemImage }
         });
         toast({ title: "Success", description: "Item updated" });
       } else {
         await createMenuItemMutation.mutateAsync({
-          data: {
-            name: itemName,
-            description: itemDesc,
-            price: Number(itemPrice),
-            categoryId: Number(itemCategory),
-            imageUrl: itemImage,
-            available: true,
-            isBestSeller: false
-          }
+          data: { name: itemName, description: itemDesc, price: Number(itemPrice), categoryId: Number(itemCategory), imageUrl: itemImage, available: true, isBestSeller: false }
         });
         toast({ title: "Success", description: "Item created" });
       }
@@ -156,18 +139,12 @@ export default function AdminMenu() {
       toast({ title: "Error", description: "Name is required", variant: "destructive" });
       return;
     }
-
     try {
       if (editingCategory) {
-        await updateCategoryMutation.mutateAsync({
-          id: editingCategory.id,
-          data: { name: catName, sortOrder: Number(catSort) }
-        });
+        await updateCategoryMutation.mutateAsync({ id: editingCategory.id, data: { name: catName, sortOrder: Number(catSort) } });
         toast({ title: "Success", description: "Category updated" });
       } else {
-        await createCategoryMutation.mutateAsync({
-          data: { name: catName, sortOrder: Number(catSort) }
-        });
+        await createCategoryMutation.mutateAsync({ data: { name: catName, sortOrder: Number(catSort) } });
         toast({ title: "Success", description: "Category created" });
       }
       queryClient.invalidateQueries({ queryKey: getListCategoriesQueryKey() });
@@ -191,12 +168,8 @@ export default function AdminMenu() {
 
   const toggleAvailability = async (id: number, currentAvailable: boolean) => {
     try {
-      await updateMenuItemMutation.mutateAsync({
-        id,
-        data: { available: !currentAvailable }
-      });
+      await updateMenuItemMutation.mutateAsync({ id, data: { available: !currentAvailable } });
       queryClient.invalidateQueries({ queryKey: getListMenuItemsQueryKey({}) });
-      toast({ title: "Updated", description: "Item availability updated" });
     } catch (e) {
       toast({ title: "Error", description: "Failed to update item", variant: "destructive" });
     }
@@ -204,12 +177,8 @@ export default function AdminMenu() {
 
   const toggleBestSeller = async (id: number, currentBestSeller: boolean) => {
     try {
-      await updateMenuItemMutation.mutateAsync({
-        id,
-        data: { isBestSeller: !currentBestSeller }
-      });
+      await updateMenuItemMutation.mutateAsync({ id, data: { isBestSeller: !currentBestSeller } });
       queryClient.invalidateQueries({ queryKey: getListMenuItemsQueryKey({}) });
-      toast({ title: "Updated", description: "Best seller status updated" });
     } catch (e) {
       toast({ title: "Error", description: "Failed to update item", variant: "destructive" });
     }
@@ -218,7 +187,7 @@ export default function AdminMenu() {
   if (isLoadingCats || isLoadingItems) {
     return (
       <AdminLayout>
-        <div className="flex h-full items-center justify-center">
+        <div className="flex items-center justify-center min-h-[60vh]">
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
         </div>
       </AdminLayout>
@@ -231,27 +200,32 @@ export default function AdminMenu() {
 
   return (
     <AdminLayout>
-      <div className="p-8 max-w-6xl mx-auto">
-        <div className="flex justify-between items-center mb-8">
+      <div className="p-4 md:p-8 max-w-6xl mx-auto">
+        {/* Header */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6 md:mb-8">
           <div>
-            <h1 className="text-3xl font-bold">Menu Management</h1>
-            <p className="text-muted-foreground mt-1">Manage your categories and menu items</p>
+            <h1 className="text-2xl md:text-3xl font-bold">Menu Management</h1>
+            <p className="text-muted-foreground mt-1 text-sm">Manage your categories and menu items</p>
           </div>
-          <div className="flex gap-3">
-            <Button variant="outline" onClick={() => openCategoryDialog()}><Plus className="w-4 h-4 mr-2" /> Add Category</Button>
-            <Button onClick={() => openItemDialog()}><Plus className="w-4 h-4 mr-2" /> Add Item</Button>
+          <div className="flex gap-2">
+            <Button variant="outline" size="sm" onClick={() => openCategoryDialog()}>
+              <Plus className="w-4 h-4 mr-1" /> Category
+            </Button>
+            <Button size="sm" onClick={() => openItemDialog()}>
+              <Plus className="w-4 h-4 mr-1" /> Add Item
+            </Button>
           </div>
         </div>
 
         <Tabs defaultValue="items" className="w-full">
-          <TabsList className="mb-6">
+          <TabsList className="mb-4 md:mb-6">
             <TabsTrigger value="items">Menu Items</TabsTrigger>
             <TabsTrigger value="categories">Categories</TabsTrigger>
           </TabsList>
           
           <TabsContent value="items">
-            <div className="flex items-center gap-4 mb-6">
-              <div className="relative flex-1 max-w-md">
+            <div className="flex items-center gap-3 mb-4 md:mb-6">
+              <div className="relative flex-1">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground w-4 h-4" />
                 <Input 
                   placeholder="Search items..." 
@@ -262,38 +236,38 @@ export default function AdminMenu() {
               </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
               {filteredItems.map(item => (
                 <Card key={item.id} className={!item.available ? "opacity-60" : ""}>
-                  <CardContent className="p-4 flex gap-4">
+                  <CardContent className="p-3 md:p-4 flex gap-3">
                     {item.imageUrl ? (
-                      <div className="w-24 h-24 rounded-md object-cover bg-muted shrink-0 overflow-hidden">
+                      <div className="w-20 h-20 md:w-24 md:h-24 rounded-md bg-muted shrink-0 overflow-hidden">
                         <img src={item.imageUrl} alt={item.name} className="w-full h-full object-cover" />
                       </div>
                     ) : (
-                      <div className="w-24 h-24 rounded-md bg-muted flex items-center justify-center shrink-0">
+                      <div className="w-20 h-20 md:w-24 md:h-24 rounded-md bg-muted flex items-center justify-center shrink-0">
                         <span className="text-xs text-muted-foreground">No image</span>
                       </div>
                     )}
                     
                     <div className="flex-1 min-w-0">
-                      <div className="flex justify-between items-start">
-                        <div>
-                          <h3 className="font-bold text-lg truncate">{item.name}</h3>
-                          <div className="flex items-center gap-2 mt-1">
+                      <div className="flex justify-between items-start gap-2">
+                        <div className="min-w-0">
+                          <h3 className="font-bold truncate">{item.name}</h3>
+                          <div className="flex flex-wrap items-center gap-1.5 mt-1">
                             <Badge variant="secondary" className="font-normal text-xs">{item.categoryName}</Badge>
                             {item.isBestSeller && (
                               <Badge className="bg-primary text-primary-foreground font-normal text-xs px-1">
-                                <Star className="w-3 h-3 mr-1 fill-current" /> Best Seller
+                                <Star className="w-3 h-3 mr-0.5 fill-current" /> Best
                               </Badge>
                             )}
                           </div>
                         </div>
-                        <div className="font-bold">{formatRupiah(item.price)}</div>
+                        <div className="font-bold text-sm shrink-0">{formatRupiah(item.price)}</div>
                       </div>
                       
-                      <div className="mt-4 flex items-center justify-between border-t pt-3">
-                        <div className="flex items-center gap-4">
+                      <div className="mt-3 flex items-center justify-between border-t pt-2">
+                        <div className="flex flex-col gap-1.5">
                           <div className="flex items-center gap-2">
                             <Switch 
                               checked={item.available} 
@@ -309,9 +283,13 @@ export default function AdminMenu() {
                             <span className="text-xs font-medium">Best Seller</span>
                           </div>
                         </div>
-                        <div className="flex gap-2">
-                          <Button variant="ghost" size="icon" onClick={() => openItemDialog(item)} className="h-8 w-8 text-muted-foreground"><Edit className="h-4 w-4" /></Button>
-                          <Button variant="ghost" size="icon" onClick={() => handleDeleteItem(item.id)} className="h-8 w-8 text-destructive"><Trash2 className="h-4 w-4" /></Button>
+                        <div className="flex gap-1">
+                          <Button variant="ghost" size="icon" onClick={() => openItemDialog(item)} className="h-9 w-9 text-muted-foreground">
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                          <Button variant="ghost" size="icon" onClick={() => handleDeleteItem(item.id)} className="h-9 w-9 text-destructive">
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
                         </div>
                       </div>
                     </div>
@@ -327,17 +305,23 @@ export default function AdminMenu() {
           </TabsContent>
           
           <TabsContent value="categories">
-            <div className="space-y-4">
+            <div className="space-y-3">
               {categories?.map(cat => (
                 <Card key={cat.id}>
                   <CardContent className="p-4 flex items-center justify-between">
                     <div>
-                      <h3 className="font-bold text-lg">{cat.name}</h3>
-                      <p className="text-sm text-muted-foreground mt-1">Sort Order: {cat.sortOrder}</p>
+                      <h3 className="font-bold">{cat.name}</h3>
+                      <p className="text-xs text-muted-foreground mt-0.5">Sort Order: {cat.sortOrder}</p>
                     </div>
                     <div className="flex gap-2">
-                      <Button variant="outline" size="sm" onClick={() => openCategoryDialog(cat)}><Edit className="h-4 w-4 mr-2" /> Edit</Button>
-                      <Button variant="outline" size="sm" onClick={() => handleDeleteCategory(cat.id)} className="text-destructive"><Trash2 className="h-4 w-4 mr-2" /> Delete</Button>
+                      <Button variant="outline" size="sm" onClick={() => openCategoryDialog(cat)}>
+                        <Edit className="h-4 w-4 mr-1 md:mr-2" />
+                        <span className="hidden md:inline">Edit</span>
+                      </Button>
+                      <Button variant="outline" size="sm" onClick={() => handleDeleteCategory(cat.id)} className="text-destructive">
+                        <Trash2 className="h-4 w-4 mr-1 md:mr-2" />
+                        <span className="hidden md:inline">Delete</span>
+                      </Button>
                     </div>
                   </CardContent>
                 </Card>
@@ -347,12 +331,13 @@ export default function AdminMenu() {
         </Tabs>
       </div>
 
+      {/* Item Dialog */}
       <Dialog open={isItemDialogOpen} onOpenChange={setIsItemDialogOpen}>
-        <DialogContent>
+        <DialogContent className="w-[calc(100vw-2rem)] max-w-lg max-h-[85vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>{editingItem ? "Edit Item" : "Add Menu Item"}</DialogTitle>
           </DialogHeader>
-          <div className="space-y-4 py-4">
+          <div className="space-y-4 py-2">
             <div className="space-y-2">
               <Label>Name</Label>
               <Input value={itemName} onChange={e => setItemName(e.target.value)} />
@@ -376,28 +361,29 @@ export default function AdminMenu() {
             </div>
             <div className="space-y-2">
               <Label>Description</Label>
-              <Textarea value={itemDesc} onChange={e => setItemDesc(e.target.value)} />
+              <Textarea value={itemDesc} onChange={e => setItemDesc(e.target.value)} rows={3} />
             </div>
             <div className="space-y-2">
               <Label>Image URL</Label>
-              <Input value={itemImage} onChange={e => setItemImage(e.target.value)} placeholder="/images/espresso.png" />
+              <Input value={itemImage} onChange={e => setItemImage(e.target.value)} placeholder="/images/menu/espresso.png" />
             </div>
           </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsItemDialogOpen(false)}>Cancel</Button>
-            <Button onClick={handleSaveItem} disabled={createMenuItemMutation.isPending || updateMenuItemMutation.isPending}>
+          <DialogFooter className="flex-col sm:flex-row gap-2">
+            <Button variant="outline" onClick={() => setIsItemDialogOpen(false)} className="w-full sm:w-auto">Cancel</Button>
+            <Button onClick={handleSaveItem} disabled={createMenuItemMutation.isPending || updateMenuItemMutation.isPending} className="w-full sm:w-auto">
               {createMenuItemMutation.isPending || updateMenuItemMutation.isPending ? "Saving..." : "Save Item"}
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
+      {/* Category Dialog */}
       <Dialog open={isCategoryDialogOpen} onOpenChange={setIsCategoryDialogOpen}>
-        <DialogContent>
+        <DialogContent className="w-[calc(100vw-2rem)] max-w-md">
           <DialogHeader>
             <DialogTitle>{editingCategory ? "Edit Category" : "Add Category"}</DialogTitle>
           </DialogHeader>
-          <div className="space-y-4 py-4">
+          <div className="space-y-4 py-2">
             <div className="space-y-2">
               <Label>Name</Label>
               <Input value={catName} onChange={e => setCatName(e.target.value)} />
@@ -407,9 +393,9 @@ export default function AdminMenu() {
               <Input type="number" value={catSort} onChange={e => setCatSort(e.target.value)} />
             </div>
           </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsCategoryDialogOpen(false)}>Cancel</Button>
-            <Button onClick={handleSaveCategory} disabled={createCategoryMutation.isPending || updateCategoryMutation.isPending}>
+          <DialogFooter className="flex-col sm:flex-row gap-2">
+            <Button variant="outline" onClick={() => setIsCategoryDialogOpen(false)} className="w-full sm:w-auto">Cancel</Button>
+            <Button onClick={handleSaveCategory} disabled={createCategoryMutation.isPending || updateCategoryMutation.isPending} className="w-full sm:w-auto">
               {createCategoryMutation.isPending || updateCategoryMutation.isPending ? "Saving..." : "Save Category"}
             </Button>
           </DialogFooter>
