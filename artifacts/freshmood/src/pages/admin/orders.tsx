@@ -8,12 +8,11 @@ import {
   ListOrdersStatus,
   Order
 } from "@workspace/api-client-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { formatDistanceToNow, parseISO, format } from "date-fns";
-import { Loader2, Search, Eye } from "lucide-react";
+import { Loader2, Search, Eye, Download } from "lucide-react";
 import { formatRupiah } from "@/lib/format";
 import {
   Select,
@@ -28,6 +27,78 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+
+const PAYMENT_LABELS: Record<string, { label: string; color: string }> = {
+  QRIS:          { label: "QRIS / e-Wallet",   color: "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400" },
+  CASH:          { label: "Cash at Cashier",    color: "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400" },
+  DELIVERY_CASH: { label: "Delivery Cash",      color: "bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400" },
+  CARD:          { label: "Credit/Debit Card",  color: "bg-cyan-100 text-cyan-700 dark:bg-cyan-900/30 dark:text-cyan-400" },
+};
+
+function PaymentBadge({ method }: { method?: string | null }) {
+  if (!method) return null;
+  const p = PAYMENT_LABELS[method] ?? { label: method, color: "bg-gray-100 text-gray-600" };
+  return (
+    <span className={`inline-block px-2 py-0.5 rounded-full text-xs font-medium whitespace-nowrap ${p.color}`}>
+      {p.label}
+    </span>
+  );
+}
+
+function printReceipt(order: NonNullable<ReturnType<typeof useGetOrder>["data"]>) {
+  const isDelivery = order.paymentMethod === "DELIVERY_CASH";
+  const paymentInfo = PAYMENT_LABELS[order.paymentMethod ?? ""] ?? { label: order.paymentMethod ?? "-" };
+
+  const itemRows = (order.items ?? []).map(item => `
+    <tr>
+      <td style="padding:4px 0">${item.quantity}x ${item.menuItemName}${item.notes ? `<br/><span style="font-size:10px;color:#888">Catatan: ${item.notes}</span>` : ""}</td>
+      <td style="padding:4px 0;text-align:right">${formatRupiah(item.subtotal)}</td>
+    </tr>`).join("");
+
+  const feeRows = isDelivery
+    ? `<tr><td style="padding:3px 0;color:#555">Delivery Fee</td><td style="text-align:right">Rp 5.000</td></tr>`
+    : `
+    <tr><td style="padding:3px 0;color:#555">Tax (10%)</td><td style="text-align:right">${formatRupiah(order.tax)}</td></tr>
+    <tr><td style="padding:3px 0;color:#555">Service Fee (5%)</td><td style="text-align:right">${formatRupiah(order.serviceFee)}</td></tr>`;
+
+  const html = `<!DOCTYPE html>
+<html><head><meta charset="UTF-8"/>
+<title>Struk Order #${order.id}</title>
+<style>
+  body{font-family:monospace;font-size:13px;margin:0;padding:16px;max-width:320px;color:#111}
+  h1{font-size:18px;font-weight:bold;margin:0 0 2px}
+  .sub{font-size:11px;color:#555;margin-bottom:12px}
+  table{width:100%;border-collapse:collapse}
+  .divider{border:none;border-top:1px dashed #aaa;margin:10px 0}
+  .total-row td{font-weight:bold;font-size:15px;padding-top:8px;border-top:1px solid #222}
+  .footer{text-align:center;font-size:10px;color:#888;margin-top:16px}
+  @media print{body{padding:4px}}
+</style>
+</head><body>
+<h1>FreshMood</h1>
+<div class="sub">Struk Order #${order.id}</div>
+<table>
+  <tr><td style="color:#555">Tanggal</td><td style="text-align:right">${format(parseISO(order.createdAt), "dd MMM yyyy, HH:mm")}</td></tr>
+  <tr><td style="color:#555">Meja</td><td style="text-align:right">${order.tableNumber}</td></tr>
+  <tr><td style="color:#555">Nama</td><td style="text-align:right">${order.customerName}</td></tr>
+  <tr><td style="color:#555">Pembayaran</td><td style="text-align:right">${paymentInfo.label}</td></tr>
+</table>
+<hr class="divider"/>
+<table>${itemRows}</table>
+<hr class="divider"/>
+<table>
+  <tr><td style="padding:3px 0;color:#555">Subtotal</td><td style="text-align:right">${formatRupiah(order.subtotal)}</td></tr>
+  ${feeRows}
+  <tr class="total-row"><td>TOTAL</td><td style="text-align:right">${formatRupiah(order.total)}</td></tr>
+</table>
+${order.notes ? `<hr class="divider"/><div style="font-size:11px;color:#555">Catatan: ${order.notes}</div>` : ""}
+<div class="footer">Terima kasih telah memesan di FreshMood!<br/>Selamat menikmati 🍽️</div>
+<script>window.onload=()=>{window.print();}</script>
+</body></html>`;
+
+  const win = window.open("", "_blank", "width=380,height=600");
+  if (win) { win.document.write(html); win.document.close(); }
+}
 
 export default function AdminOrders() {
   const [statusFilter, setStatusFilter] = useState<string>("all");
@@ -113,6 +184,7 @@ export default function AdminOrders() {
                     <th className="px-6 py-4 font-medium">Order ID</th>
                     <th className="px-6 py-4 font-medium">Date</th>
                     <th className="px-6 py-4 font-medium">Table & Customer</th>
+                    <th className="px-6 py-4 font-medium">Payment</th>
                     <th className="px-6 py-4 font-medium">Status</th>
                     <th className="px-6 py-4 font-medium">Total</th>
                     <th className="px-6 py-4 font-medium text-right">Actions</th>
@@ -133,6 +205,9 @@ export default function AdminOrders() {
                         <div className="text-muted-foreground">{order.customerName}</div>
                       </td>
                       <td className="px-6 py-4">
+                        <PaymentBadge method={order.paymentMethod} />
+                      </td>
+                      <td className="px-6 py-4">
                         <span className={`px-2.5 py-1 rounded-full text-xs font-medium capitalize ${getStatusColor(order.status)}`}>
                           {order.status}
                         </span>
@@ -147,7 +222,7 @@ export default function AdminOrders() {
                   ))}
                   {filteredOrders.length === 0 && (
                     <tr>
-                      <td colSpan={6} className="px-6 py-12 text-center text-muted-foreground">No orders found</td>
+                      <td colSpan={7} className="px-6 py-12 text-center text-muted-foreground">No orders found</td>
                     </tr>
                   )}
                 </tbody>
@@ -169,6 +244,9 @@ export default function AdminOrders() {
                     </p>
                   </div>
                   <Eye className="w-4 h-4 text-muted-foreground shrink-0 mt-1" />
+                </div>
+                <div className="flex items-center gap-2 mt-2 flex-wrap">
+                  <PaymentBadge method={order.paymentMethod} />
                 </div>
                 <div className="flex items-center justify-between mt-3">
                   <span className={`px-2.5 py-1 rounded-full text-xs font-medium capitalize ${getStatusColor(order.status)}`}>
@@ -218,6 +296,10 @@ export default function AdminOrders() {
                     <p className="text-xs text-muted-foreground mb-1">Date</p>
                     <p className="font-medium text-sm">{format(parseISO(selectedOrder.createdAt), "PPp")}</p>
                   </div>
+                  <div className="col-span-2">
+                    <p className="text-xs text-muted-foreground mb-1">Payment Method</p>
+                    <PaymentBadge method={selectedOrder.paymentMethod} />
+                  </div>
                 </div>
 
                 <div className="border-t pt-4">
@@ -243,14 +325,23 @@ export default function AdminOrders() {
                     <span className="text-muted-foreground">Subtotal</span>
                     <span>{formatRupiah(selectedOrder.subtotal)}</span>
                   </div>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">Tax (10%)</span>
-                    <span>{formatRupiah(selectedOrder.tax)}</span>
-                  </div>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">Service Fee (5%)</span>
-                    <span>{formatRupiah(selectedOrder.serviceFee)}</span>
-                  </div>
+                  {selectedOrder.paymentMethod === "DELIVERY_CASH" ? (
+                    <div className="flex justify-between text-sm">
+                      <span className="text-muted-foreground">Delivery Fee</span>
+                      <span>{formatRupiah(selectedOrder.serviceFee)}</span>
+                    </div>
+                  ) : (
+                    <>
+                      <div className="flex justify-between text-sm">
+                        <span className="text-muted-foreground">Tax (10%)</span>
+                        <span>{formatRupiah(selectedOrder.tax)}</span>
+                      </div>
+                      <div className="flex justify-between text-sm">
+                        <span className="text-muted-foreground">Service Fee (5%)</span>
+                        <span>{formatRupiah(selectedOrder.serviceFee)}</span>
+                      </div>
+                    </>
+                  )}
                   <div className="flex justify-between font-bold text-lg pt-2 border-t mt-2">
                     <span>Total</span>
                     <span>{formatRupiah(selectedOrder.total)}</span>
@@ -263,6 +354,17 @@ export default function AdminOrders() {
                     <p className="text-sm">{selectedOrder.notes}</p>
                   </div>
                 )}
+
+                <div className="pt-2">
+                  <Button
+                    variant="outline"
+                    className="w-full"
+                    onClick={() => printReceipt(selectedOrder)}
+                  >
+                    <Download className="w-4 h-4 mr-2" />
+                    Download Struk
+                  </Button>
+                </div>
               </div>
             ) : null}
           </DialogContent>

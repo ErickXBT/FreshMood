@@ -3,8 +3,9 @@ import { useGetOrder, getGetOrderQueryKey } from "@workspace/api-client-react";
 import { formatRupiah } from "@/lib/format";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Loader2, CheckCircle2, Clock, ChefHat, ShoppingBag, Utensils, ChevronRight, Check } from "lucide-react";
+import { Loader2, CheckCircle2, Clock, ChefHat, ShoppingBag, Utensils, ChevronRight, Check, Download } from "lucide-react";
 import { motion } from "framer-motion";
+import { format, parseISO } from "date-fns";
 
 const STATUS_STEPS = [
   { id: 'pending', label: 'Order Placed', icon: ShoppingBag },
@@ -13,6 +14,68 @@ const STATUS_STEPS = [
   { id: 'ready', label: "Ready to Serve", icon: Utensils },
   { id: 'completed', label: 'Completed', icon: CheckCircle2 },
 ];
+
+const PAYMENT_LABELS: Record<string, string> = {
+  QRIS:          "QRIS / e-Wallet",
+  CASH:          "Cash at Cashier",
+  DELIVERY_CASH: "Delivery Cash",
+  CARD:          "Credit/Debit Card",
+};
+
+function printReceipt(order: NonNullable<ReturnType<typeof useGetOrder>["data"]>) {
+  const isDelivery = order.paymentMethod === "DELIVERY_CASH";
+  const paymentLabel = PAYMENT_LABELS[order.paymentMethod ?? ""] ?? order.paymentMethod ?? "-";
+
+  const itemRows = (order.items ?? []).map(item => `
+    <tr>
+      <td style="padding:4px 0">${item.quantity}x ${item.menuItemName}${item.notes ? `<br/><span style="font-size:10px;color:#888">Catatan: ${item.notes}</span>` : ""}</td>
+      <td style="padding:4px 0;text-align:right">${formatRupiah(item.subtotal)}</td>
+    </tr>`).join("");
+
+  const feeRows = isDelivery
+    ? `<tr><td style="padding:3px 0;color:#555">Delivery Fee</td><td style="text-align:right">${formatRupiah(order.serviceFee)}</td></tr>`
+    : `
+    <tr><td style="padding:3px 0;color:#555">Tax (10%)</td><td style="text-align:right">${formatRupiah(order.tax)}</td></tr>
+    <tr><td style="padding:3px 0;color:#555">Service Fee (5%)</td><td style="text-align:right">${formatRupiah(order.serviceFee)}</td></tr>`;
+
+  const html = `<!DOCTYPE html>
+<html><head><meta charset="UTF-8"/>
+<title>Struk Order #${order.id}</title>
+<style>
+  body{font-family:monospace;font-size:13px;margin:0;padding:16px;max-width:320px;color:#111}
+  h1{font-size:18px;font-weight:bold;margin:0 0 2px}
+  .sub{font-size:11px;color:#555;margin-bottom:12px}
+  table{width:100%;border-collapse:collapse}
+  .divider{border:none;border-top:1px dashed #aaa;margin:10px 0}
+  .total-row td{font-weight:bold;font-size:15px;padding-top:8px;border-top:1px solid #222}
+  .footer{text-align:center;font-size:10px;color:#888;margin-top:16px}
+  @media print{body{padding:4px}}
+</style>
+</head><body>
+<h1>FreshMood</h1>
+<div class="sub">Struk Order #${order.id}</div>
+<table>
+  <tr><td style="color:#555">Tanggal</td><td style="text-align:right">${format(parseISO(order.createdAt), "dd MMM yyyy, HH:mm")}</td></tr>
+  <tr><td style="color:#555">Meja</td><td style="text-align:right">${order.tableNumber}</td></tr>
+  <tr><td style="color:#555">Nama</td><td style="text-align:right">${order.customerName}</td></tr>
+  <tr><td style="color:#555">Pembayaran</td><td style="text-align:right">${paymentLabel}</td></tr>
+</table>
+<hr class="divider"/>
+<table>${itemRows}</table>
+<hr class="divider"/>
+<table>
+  <tr><td style="padding:3px 0;color:#555">Subtotal</td><td style="text-align:right">${formatRupiah(order.subtotal)}</td></tr>
+  ${feeRows}
+  <tr class="total-row"><td>TOTAL</td><td style="text-align:right">${formatRupiah(order.total)}</td></tr>
+</table>
+${order.notes ? `<hr class="divider"/><div style="font-size:11px;color:#555">Catatan: ${order.notes}</div>` : ""}
+<div class="footer">Terima kasih telah memesan di FreshMood!<br/>Selamat menikmati 🍽️</div>
+<script>window.onload=()=>{window.print();}</script>
+</body></html>`;
+
+  const win = window.open("", "_blank", "width=380,height=600");
+  if (win) { win.document.write(html); win.document.close(); }
+}
 
 export default function OrderStatusPage() {
   const [, params] = useRoute("/order-status/:orderId");
@@ -63,6 +126,7 @@ export default function OrderStatusPage() {
   }
 
   const currentStepIndex = STATUS_STEPS.findIndex(s => s.id === order.status);
+  const isDelivery = order.paymentMethod === "DELIVERY_CASH";
 
   return (
     <div className="min-h-[100dvh] bg-background">
@@ -95,12 +159,10 @@ export default function OrderStatusPage() {
               )}
             </div>
 
-            {/* Simple vertical stepper — works on all screen sizes */}
+            {/* Simple vertical stepper */}
             <div className="p-5">
               <div className="relative">
-                {/* Vertical line */}
                 <div className="absolute left-5 top-5 bottom-5 w-0.5 bg-border" />
-
                 <div className="space-y-4">
                   {STATUS_STEPS.map((step, idx) => {
                     const Icon = step.icon;
@@ -154,20 +216,61 @@ export default function OrderStatusPage() {
             ))}
           </div>
           
-          <div className="border-t border-border pt-3">
-            <div className="flex justify-between font-bold">
+          <div className="border-t border-border pt-3 space-y-1.5">
+            <div className="flex justify-between text-sm text-muted-foreground">
+              <span>Subtotal</span>
+              <span>{formatRupiah(order.subtotal)}</span>
+            </div>
+            {isDelivery ? (
+              <div className="flex justify-between text-sm text-muted-foreground">
+                <span>Delivery Fee</span>
+                <span>{formatRupiah(order.serviceFee)}</span>
+              </div>
+            ) : (
+              <>
+                <div className="flex justify-between text-sm text-muted-foreground">
+                  <span>Tax (10%)</span>
+                  <span>{formatRupiah(order.tax)}</span>
+                </div>
+                <div className="flex justify-between text-sm text-muted-foreground">
+                  <span>Service Fee (5%)</span>
+                  <span>{formatRupiah(order.serviceFee)}</span>
+                </div>
+              </>
+            )}
+            <div className="flex justify-between font-bold text-base pt-2 border-t border-border">
               <span>Total Paid</span>
               <span className="text-primary">{formatRupiah(order.total)}</span>
             </div>
-            <p className="text-xs text-muted-foreground text-right mt-1">via {order.paymentMethod}</p>
+            <p className="text-xs text-muted-foreground text-right">
+              via {PAYMENT_LABELS[order.paymentMethod ?? ""] ?? order.paymentMethod}
+            </p>
           </div>
         </div>
+
+        {/* Download Struk */}
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2 }}
+          className="mt-4"
+        >
+          <Button
+            variant="outline"
+            size="lg"
+            className="w-full rounded-2xl border-dashed"
+            onClick={() => printReceipt(order)}
+          >
+            <Download className="w-4 h-4 mr-2" />
+            Download Struk
+          </Button>
+        </motion.div>
 
         {order.status === 'completed' && (
           <motion.div 
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="mt-6 text-center"
+            className="mt-3 text-center"
           >
             <Button size="lg" className="rounded-full shadow-lg" onClick={() => setLocation("/menu")}>
               Order Again <ChevronRight className="ml-2 w-4 h-4" />
