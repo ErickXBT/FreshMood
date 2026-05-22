@@ -6,10 +6,8 @@
  * OpenAPI spec version: 0.1.0
  */
 
-export type GetRevenueByDayParams = {
-days?: number;
-/**
- * Filter by month in YYYY-MM format (overrides days)
- */
-month?: string;
-};
+export interface MonthlyRevenue {
+  month: string;
+  revenue: number;
+  orderCount: number;
+}

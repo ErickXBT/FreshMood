@@ -395,6 +395,12 @@ paths:
       operationId: getDashboardSummary
       tags: [admin]
       summary: Get dashboard analytics summary
+      parameters:
+        - name: month
+          in: query
+          description: Filter by month in YYYY-MM format
+          schema:
+            type: string
       responses:
         "200":
           description: Dashboard summary
@@ -413,6 +419,11 @@ paths:
           in: query
           schema:
             type: integer
+        - name: month
+          in: query
+          description: Filter by month in YYYY-MM format
+          schema:
+            type: string
       responses:
         "200":
           description: Top items
@@ -447,12 +458,17 @@ paths:
     get:
       operationId: getRevenueByDay
       tags: [admin]
-      summary: Get revenue aggregated by day for the last N days
+      summary: Get revenue aggregated by day for the last N days or a specific month
       parameters:
         - name: days
           in: query
           schema:
             type: integer
+        - name: month
+          in: query
+          description: Filter by month in YYYY-MM format (overrides days)
+          schema:
+            type: string
       responses:
         "200":
           description: Revenue by day
@@ -462,6 +478,42 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/RevenueByDay"
+
+  /admin/item-sales:
+    get:
+      operationId: getItemSales
+      tags: [admin]
+      summary: Get all menu items with sales data sorted by qty sold
+      parameters:
+        - name: month
+          in: query
+          description: Filter by month in YYYY-MM format
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Item sales detail
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ItemSale"
+
+  /admin/monthly-revenue:
+    get:
+      operationId: getMonthlyRevenue
+      tags: [admin]
+      summary: Get revenue and order count aggregated by month
+      responses:
+        "200":
+          description: Monthly revenue list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/MonthlyRevenue"
 
   /admin/login:
     post:
@@ -782,6 +834,36 @@ components:
       required: [date, revenue, orderCount]
       properties:
         date:
+          type: string
+        revenue:
+          type: number
+        orderCount:
+          type: integer
+
+    ItemSale:
+      type: object
+      required: [menuItemId, name, price, qtySold, revenue, orderCount]
+      properties:
+        menuItemId:
+          type: integer
+        name:
+          type: string
+        imageUrl:
+          type: ["string", "null"]
+        price:
+          type: number
+        qtySold:
+          type: integer
+        revenue:
+          type: number
+        orderCount:
+          type: integer
+
+    MonthlyRevenue:
+      type: object
+      required: [month, revenue, orderCount]
+      properties:
+        month:
           type: string
         revenue:
           type: number

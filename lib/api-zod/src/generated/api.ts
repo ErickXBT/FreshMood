@@ -363,6 +363,10 @@ export const GetPaymentResponse = zod.object({
 /**
  * @summary Get dashboard analytics summary
  */
+export const GetDashboardSummaryQueryParams = zod.object({
+  "month": zod.coerce.string().optional().describe('Filter by month in YYYY-MM format')
+})
+
 export const GetDashboardSummaryResponse = zod.object({
   "totalOrders": zod.number(),
   "totalRevenue": zod.number(),
@@ -379,7 +383,8 @@ export const GetDashboardSummaryResponse = zod.object({
  * @summary Get best-selling menu items by order count
  */
 export const GetTopMenuItemsQueryParams = zod.object({
-  "limit": zod.coerce.number().optional()
+  "limit": zod.coerce.number().optional(),
+  "month": zod.coerce.string().optional().describe('Filter by month in YYYY-MM format')
 })
 
 export const GetTopMenuItemsResponseItem = zod.object({
@@ -431,10 +436,11 @@ export const GetRecentOrdersResponse = zod.array(GetRecentOrdersResponseItem)
 
 
 /**
- * @summary Get revenue aggregated by day for the last N days
+ * @summary Get revenue aggregated by day for the last N days or a specific month
  */
 export const GetRevenueByDayQueryParams = zod.object({
-  "days": zod.coerce.number().optional()
+  "days": zod.coerce.number().optional(),
+  "month": zod.coerce.string().optional().describe('Filter by month in YYYY-MM format (overrides days)')
 })
 
 export const GetRevenueByDayResponseItem = zod.object({
@@ -443,6 +449,36 @@ export const GetRevenueByDayResponseItem = zod.object({
   "orderCount": zod.number()
 })
 export const GetRevenueByDayResponse = zod.array(GetRevenueByDayResponseItem)
+
+
+/**
+ * @summary Get all menu items with sales data sorted by qty sold
+ */
+export const GetItemSalesQueryParams = zod.object({
+  "month": zod.coerce.string().optional().describe('Filter by month in YYYY-MM format')
+})
+
+export const GetItemSalesResponseItem = zod.object({
+  "menuItemId": zod.number(),
+  "name": zod.string(),
+  "imageUrl": zod.string().nullish(),
+  "price": zod.number(),
+  "qtySold": zod.number(),
+  "revenue": zod.number(),
+  "orderCount": zod.number()
+})
+export const GetItemSalesResponse = zod.array(GetItemSalesResponseItem)
+
+
+/**
+ * @summary Get revenue and order count aggregated by month
+ */
+export const GetMonthlyRevenueResponseItem = zod.object({
+  "month": zod.string(),
+  "revenue": zod.number(),
+  "orderCount": zod.number()
+})
+export const GetMonthlyRevenueResponse = zod.array(GetMonthlyRevenueResponseItem)
 
 
 /**

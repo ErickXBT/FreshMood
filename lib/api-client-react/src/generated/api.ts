@@ -26,15 +26,19 @@ import type {
   CategoryInput,
   CategoryPatch,
   DashboardSummary,
+  GetDashboardSummaryParams,
+  GetItemSalesParams,
   GetRecentOrdersParams,
   GetRevenueByDayParams,
   GetTopMenuItemsParams,
   HealthStatus,
+  ItemSale,
   ListMenuItemsParams,
   ListOrdersParams,
   MenuItem,
   MenuItemInput,
   MenuItemPatch,
+  MonthlyRevenue,
   Order,
   OrderInput,
   OrderStatusPatch,
@@ -1477,20 +1481,27 @@ export function useGetPayment<TData = Awaited<ReturnType<typeof getPayment>>, TE
 
 
 
-export const getGetDashboardSummaryUrl = () => {
+export const getGetDashboardSummaryUrl = (params?: GetDashboardSummaryParams,) => {
+  const normalizedParams = new URLSearchParams();
 
+  Object.entries(params || {}).forEach(([key, value]) => {
 
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : value.toString())
+    }
+  });
 
+  const stringifiedParams = normalizedParams.toString();
 
-  return `/api/admin/dashboard-summary`
+  return stringifiedParams.length > 0 ? `/api/admin/dashboard-summary?${stringifiedParams}` : `/api/admin/dashboard-summary`
 }
 
 /**
  * @summary Get dashboard analytics summary
  */
-export const getDashboardSummary = async ( options?: RequestInit): Promise<DashboardSummary> => {
+export const getDashboardSummary = async (params?: GetDashboardSummaryParams, options?: RequestInit): Promise<DashboardSummary> => {
 
-  return customFetch<DashboardSummary>(getGetDashboardSummaryUrl(),
+  return customFetch<DashboardSummary>(getGetDashboardSummaryUrl(params),
   {
     ...options,
     method: 'GET'
@@ -1503,23 +1514,23 @@ export const getDashboardSummary = async ( options?: RequestInit): Promise<Dashb
 
 
 
-export const getGetDashboardSummaryQueryKey = () => {
+export const getGetDashboardSummaryQueryKey = (params?: GetDashboardSummaryParams,) => {
     return [
-    `/api/admin/dashboard-summary`
+    `/api/admin/dashboard-summary`, ...(params ? [params] : [])
     ] as const;
     }
 
 
-export const getGetDashboardSummaryQueryOptions = <TData = Awaited<ReturnType<typeof getDashboardSummary>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getDashboardSummary>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+export const getGetDashboardSummaryQueryOptions = <TData = Awaited<ReturnType<typeof getDashboardSummary>>, TError = ErrorType<unknown>>(params?: GetDashboardSummaryParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getDashboardSummary>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
 ) => {
 
 const {query: queryOptions, request: requestOptions} = options ?? {};
 
-  const queryKey =  queryOptions?.queryKey ?? getGetDashboardSummaryQueryKey();
+  const queryKey =  queryOptions?.queryKey ?? getGetDashboardSummaryQueryKey(params);
 
 
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof getDashboardSummary>>> = ({ signal }) => getDashboardSummary({ signal, ...requestOptions });
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getDashboardSummary>>> = ({ signal }) => getDashboardSummary(params, { signal, ...requestOptions });
 
 
 
@@ -1537,11 +1548,11 @@ export type GetDashboardSummaryQueryError = ErrorType<unknown>
  */
 
 export function useGetDashboardSummary<TData = Awaited<ReturnType<typeof getDashboardSummary>>, TError = ErrorType<unknown>>(
-  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getDashboardSummary>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+ params?: GetDashboardSummaryParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getDashboardSummary>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
 
  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
 
-  const queryOptions = getGetDashboardSummaryQueryOptions(options)
+  const queryOptions = getGetDashboardSummaryQueryOptions(params,options)
 
   const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
 
@@ -1738,7 +1749,7 @@ export const getGetRevenueByDayUrl = (params?: GetRevenueByDayParams,) => {
 }
 
 /**
- * @summary Get revenue aggregated by day for the last N days
+ * @summary Get revenue aggregated by day for the last N days or a specific month
  */
 export const getRevenueByDay = async (params?: GetRevenueByDayParams, options?: RequestInit): Promise<RevenueByDay[]> => {
 
@@ -1785,7 +1796,7 @@ export type GetRevenueByDayQueryError = ErrorType<unknown>
 
 
 /**
- * @summary Get revenue aggregated by day for the last N days
+ * @summary Get revenue aggregated by day for the last N days or a specific month
  */
 
 export function useGetRevenueByDay<TData = Awaited<ReturnType<typeof getRevenueByDay>>, TError = ErrorType<unknown>>(
@@ -1794,6 +1805,167 @@ export function useGetRevenueByDay<TData = Awaited<ReturnType<typeof getRevenueB
  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
 
   const queryOptions = getGetRevenueByDayQueryOptions(params,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getGetItemSalesUrl = (params?: GetItemSalesParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : value.toString())
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/admin/item-sales?${stringifiedParams}` : `/api/admin/item-sales`
+}
+
+/**
+ * @summary Get all menu items with sales data sorted by qty sold
+ */
+export const getItemSales = async (params?: GetItemSalesParams, options?: RequestInit): Promise<ItemSale[]> => {
+
+  return customFetch<ItemSale[]>(getGetItemSalesUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetItemSalesQueryKey = (params?: GetItemSalesParams,) => {
+    return [
+    `/api/admin/item-sales`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getGetItemSalesQueryOptions = <TData = Awaited<ReturnType<typeof getItemSales>>, TError = ErrorType<unknown>>(params?: GetItemSalesParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getItemSales>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetItemSalesQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getItemSales>>> = ({ signal }) => getItemSales(params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getItemSales>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetItemSalesQueryResult = NonNullable<Awaited<ReturnType<typeof getItemSales>>>
+export type GetItemSalesQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Get all menu items with sales data sorted by qty sold
+ */
+
+export function useGetItemSales<TData = Awaited<ReturnType<typeof getItemSales>>, TError = ErrorType<unknown>>(
+ params?: GetItemSalesParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getItemSales>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetItemSalesQueryOptions(params,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getGetMonthlyRevenueUrl = () => {
+
+
+
+
+  return `/api/admin/monthly-revenue`
+}
+
+/**
+ * @summary Get revenue and order count aggregated by month
+ */
+export const getMonthlyRevenue = async ( options?: RequestInit): Promise<MonthlyRevenue[]> => {
+
+  return customFetch<MonthlyRevenue[]>(getGetMonthlyRevenueUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetMonthlyRevenueQueryKey = () => {
+    return [
+    `/api/admin/monthly-revenue`
+    ] as const;
+    }
+
+
+export const getGetMonthlyRevenueQueryOptions = <TData = Awaited<ReturnType<typeof getMonthlyRevenue>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getMonthlyRevenue>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetMonthlyRevenueQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getMonthlyRevenue>>> = ({ signal }) => getMonthlyRevenue({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getMonthlyRevenue>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetMonthlyRevenueQueryResult = NonNullable<Awaited<ReturnType<typeof getMonthlyRevenue>>>
+export type GetMonthlyRevenueQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Get revenue and order count aggregated by month
+ */
+
+export function useGetMonthlyRevenue<TData = Awaited<ReturnType<typeof getMonthlyRevenue>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getMonthlyRevenue>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetMonthlyRevenueQueryOptions(options)
 
   const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
 

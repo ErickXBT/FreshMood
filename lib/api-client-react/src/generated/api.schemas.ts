@@ -215,6 +215,23 @@ export interface RevenueByDay {
   orderCount: number;
 }
 
+export interface ItemSale {
+  menuItemId: number;
+  name: string;
+  /** @nullable */
+  imageUrl?: string | null;
+  price: number;
+  qtySold: number;
+  revenue: number;
+  orderCount: number;
+}
+
+export interface MonthlyRevenue {
+  month: string;
+  revenue: number;
+  orderCount: number;
+}
+
 export interface AdminLoginInput {
   username: string;
   password: string;
@@ -249,8 +266,19 @@ export const ListOrdersStatus = {
   cancelled: 'cancelled',
 } as const;
 
+export type GetDashboardSummaryParams = {
+/**
+ * Filter by month in YYYY-MM format
+ */
+month?: string;
+};
+
 export type GetTopMenuItemsParams = {
 limit?: number;
+/**
+ * Filter by month in YYYY-MM format
+ */
+month?: string;
 };
 
 export type GetRecentOrdersParams = {
@@ -259,5 +287,16 @@ limit?: number;
 
 export type GetRevenueByDayParams = {
 days?: number;
+/**
+ * Filter by month in YYYY-MM format (overrides days)
+ */
+month?: string;
+};
+
+export type GetItemSalesParams = {
+/**
+ * Filter by month in YYYY-MM format
+ */
+month?: string;
 };
 

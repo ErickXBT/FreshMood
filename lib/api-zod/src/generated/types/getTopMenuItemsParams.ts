@@ -8,4 +8,8 @@
 
 export type GetTopMenuItemsParams = {
 limit?: number;
+/**
+ * Filter by month in YYYY-MM format
+ */
+month?: string;
 };
