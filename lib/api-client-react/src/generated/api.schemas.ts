@@ -118,6 +118,8 @@ export interface Order {
   tableNumber: number;
   customerName: string;
   /** @nullable */
+  customerPhone?: string | null;
+  /** @nullable */
   notes?: string | null;
   status: OrderStatus;
   subtotal: number;
@@ -137,6 +139,7 @@ export interface Order {
 export interface OrderInput {
   tableNumber: number;
   customerName: string;
+  customerPhone?: string;
   notes?: string;
   paymentMethod?: string;
   items: OrderItemInput[];

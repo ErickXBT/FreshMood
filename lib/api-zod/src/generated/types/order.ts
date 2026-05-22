@@ -14,6 +14,8 @@ export interface Order {
   tableNumber: number;
   customerName: string;
   /** @nullable */
+  customerPhone?: string | null;
+  /** @nullable */
   notes?: string | null;
   status: OrderStatus;
   subtotal: number;

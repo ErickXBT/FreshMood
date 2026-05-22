@@ -10,6 +10,7 @@ import type { OrderItemInput } from './orderItemInput';
 export interface OrderInput {
   tableNumber: number;
   customerName: string;
+  customerPhone?: string;
   notes?: string;
   paymentMethod?: string;
   items: OrderItemInput[];

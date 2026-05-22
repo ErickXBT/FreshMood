@@ -70,7 +70,7 @@ router.post("/orders", async (req, res): Promise<void> => {
     return;
   }
 
-  const { tableNumber, customerName, notes, paymentMethod, items } = parsed.data;
+  const { tableNumber, customerName, customerPhone, notes, paymentMethod, items } = parsed.data;
 
   // Calculate prices
   let subtotal = 0;
@@ -118,6 +118,7 @@ router.post("/orders", async (req, res): Promise<void> => {
     .values({
       tableNumber,
       customerName,
+      customerPhone: customerPhone ?? null,
       notes: notes ?? null,
       status: "pending",
       subtotal: String(subtotal),

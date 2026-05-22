@@ -27,6 +27,7 @@ export default function Checkout() {
   const { toast } = useToast();
   
   const [customerName, setCustomerName] = useState("");
+  const [customerPhone, setCustomerPhone] = useState("");
   const [notes, setNotes] = useState("");
   const [paymentMethod, setPaymentMethod] = useState("QRIS");
   const [tableNumber, setTableNumber] = useState<string>("");
@@ -68,6 +69,7 @@ export default function Checkout() {
           customerName,
           notes: notes || undefined,
           paymentMethod,
+          customerPhone: customerPhone || undefined,
           items: items.map(i => ({
             menuItemId: i.menuItem.id,
             quantity: i.quantity,
@@ -169,6 +171,18 @@ export default function Checkout() {
                 value={customerName}
                 onChange={(e) => setCustomerName(e.target.value)}
                 required
+                className="bg-muted/50"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="phone">No HP / WhatsApp</Label>
+              <Input 
+                id="phone"
+                type="tel"
+                placeholder="08xxxxxxxxxx"
+                value={customerPhone}
+                onChange={(e) => setCustomerPhone(e.target.value)}
                 className="bg-muted/50"
               />
             </div>
