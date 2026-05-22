@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { downloadReceiptImage } from "@/lib/download-receipt";
 import AdminLayout from "@/components/admin-layout";
 import { 
   useListOrders, 
@@ -45,64 +46,10 @@ function PaymentBadge({ method }: { method?: string | null }) {
   );
 }
 
-function printReceipt(order: NonNullable<ReturnType<typeof useGetOrder>["data"]>) {
-  const isDelivery = order.paymentMethod === "DELIVERY_CASH";
-  const paymentInfo = PAYMENT_LABELS[order.paymentMethod ?? ""] ?? { label: order.paymentMethod ?? "-" };
-
-  const itemRows = (order.items ?? []).map(item => `
-    <tr>
-      <td style="padding:4px 0">${item.quantity}x ${item.menuItemName}${item.notes ? `<br/><span style="font-size:10px;color:#888">Catatan: ${item.notes}</span>` : ""}</td>
-      <td style="padding:4px 0;text-align:right">${formatRupiah(item.subtotal)}</td>
-    </tr>`).join("");
-
-  const feeRows = isDelivery
-    ? `<tr><td style="padding:3px 0;color:#555">Delivery Fee</td><td style="text-align:right">Rp 5.000</td></tr>`
-    : `
-    <tr><td style="padding:3px 0;color:#555">Tax (10%)</td><td style="text-align:right">${formatRupiah(order.tax)}</td></tr>
-    <tr><td style="padding:3px 0;color:#555">Service Fee (5%)</td><td style="text-align:right">${formatRupiah(order.serviceFee)}</td></tr>`;
-
-  const html = `<!DOCTYPE html>
-<html><head><meta charset="UTF-8"/>
-<title>Struk Order #${order.id}</title>
-<style>
-  body{font-family:monospace;font-size:13px;margin:0;padding:16px;max-width:320px;color:#111}
-  h1{font-size:18px;font-weight:bold;margin:0 0 2px}
-  .sub{font-size:11px;color:#555;margin-bottom:12px}
-  table{width:100%;border-collapse:collapse}
-  .divider{border:none;border-top:1px dashed #aaa;margin:10px 0}
-  .total-row td{font-weight:bold;font-size:15px;padding-top:8px;border-top:1px solid #222}
-  .footer{text-align:center;font-size:10px;color:#888;margin-top:16px}
-  @media print{body{padding:4px}}
-</style>
-</head><body>
-<h1>FreshMood</h1>
-<div class="sub">Struk Order #${order.id}</div>
-<table>
-  <tr><td style="color:#555">Tanggal</td><td style="text-align:right">${format(parseISO(order.createdAt), "dd MMM yyyy, HH:mm")}</td></tr>
-  <tr><td style="color:#555">Meja</td><td style="text-align:right">${order.tableNumber}</td></tr>
-  <tr><td style="color:#555">Nama</td><td style="text-align:right">${order.customerName}</td></tr>
-  <tr><td style="color:#555">Pembayaran</td><td style="text-align:right">${paymentInfo.label}</td></tr>
-</table>
-<hr class="divider"/>
-<table>${itemRows}</table>
-<hr class="divider"/>
-<table>
-  <tr><td style="padding:3px 0;color:#555">Subtotal</td><td style="text-align:right">${formatRupiah(order.subtotal)}</td></tr>
-  ${feeRows}
-  <tr class="total-row"><td>TOTAL</td><td style="text-align:right">${formatRupiah(order.total)}</td></tr>
-</table>
-${order.notes ? `<hr class="divider"/><div style="font-size:11px;color:#555">Catatan: ${order.notes}</div>` : ""}
-<div class="footer">Terima kasih telah memesan di FreshMood!<br/>Selamat menikmati 🍽️</div>
-<script>window.onload=()=>{window.print();}</script>
-</body></html>`;
-
-  const win = window.open("", "_blank", "width=380,height=600");
-  if (win) { win.document.write(html); win.document.close(); }
-}
-
 export default function AdminOrders() {
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [searchTable, setSearchTable] = useState("");
+  const [isDownloading, setIsDownloading] = useState(false);
   const [selectedOrderId, setSelectedOrderId] = useState<number | null>(null);
 
   const { data: orders, isLoading } = useListOrders(
@@ -348,10 +295,16 @@ export default function AdminOrders() {
                   <Button
                     variant="outline"
                     className="w-full"
-                    onClick={() => printReceipt(selectedOrder)}
+                    disabled={isDownloading}
+                    onClick={async () => {
+                      setIsDownloading(true);
+                      try { await downloadReceiptImage(selectedOrder); }
+                      finally { setIsDownloading(false); }
+                    }}
                   >
-                    <Download className="w-4 h-4 mr-2" />
-                    Download Struk
+                    {isDownloading
+                      ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Generating...</>
+                      : <><Download className="w-4 h-4 mr-2" />Download Struk</>}
                   </Button>
                 </div>
               </div>
