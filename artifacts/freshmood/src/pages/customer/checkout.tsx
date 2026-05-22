@@ -18,6 +18,7 @@ import { useToast } from "@/hooks/use-toast";
 const PAYMENT_METHODS = [
   { id: "QRIS", name: "QRIS / e-Wallet" },
   { id: "CASH", name: "Cash at Cashier" },
+  { id: "DELIVERY_CASH", name: "Delivery Cash", description: "Bayar tunai saat pesanan tiba di rumah" },
   { id: "CARD", name: "Credit/Debit Card" }
 ];
 
@@ -208,7 +209,12 @@ export default function Checkout() {
                 <div key={method.id} className="flex items-center justify-between border rounded-lg p-4 cursor-pointer hover:bg-muted/50 transition-colors [&:has([data-state=checked])]:border-primary [&:has([data-state=checked])]:bg-primary/5">
                   <div className="flex items-center space-x-3">
                     <RadioGroupItem value={method.id} id={method.id} />
-                    <Label htmlFor={method.id} className="font-medium cursor-pointer flex-1">{method.name}</Label>
+                    <div>
+                      <Label htmlFor={method.id} className="font-medium cursor-pointer">{method.name}</Label>
+                      {method.description && (
+                        <p className="text-xs text-muted-foreground mt-0.5">{method.description}</p>
+                      )}
+                    </div>
                   </div>
                 </div>
               ))}
