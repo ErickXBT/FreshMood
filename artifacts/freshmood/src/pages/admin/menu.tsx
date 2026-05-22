@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import AdminLayout from "@/components/admin-layout";
 import { 
   useListMenuItems, 
@@ -21,7 +21,7 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { formatRupiah } from "@/lib/format";
-import { Loader2, Plus, Search, Star, Edit, Trash2 } from "lucide-react";
+import { Loader2, Plus, Search, Star, Edit, Trash2, Upload, X, ImageIcon } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
 import { useQueryClient } from "@tanstack/react-query";
@@ -45,6 +45,8 @@ export default function AdminMenu() {
   const [itemPrice, setItemPrice] = useState("");
   const [itemCategory, setItemCategory] = useState("");
   const [itemImage, setItemImage] = useState("");
+  const [imageUploading, setImageUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [catName, setCatName] = useState("");
   const [catSort, setCatSort] = useState("0");
@@ -64,6 +66,25 @@ export default function AdminMenu() {
   const createCategoryMutation = useCreateCategory();
   const updateCategoryMutation = useUpdateCategory();
   const deleteCategoryMutation = useDeleteCategory();
+
+  const handleImageFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setImageUploading(true);
+    try {
+      const formData = new FormData();
+      formData.append("image", file);
+      const res = await fetch("/api/upload/menu-image", { method: "POST", body: formData });
+      if (!res.ok) throw new Error("Upload failed");
+      const { url } = await res.json();
+      setItemImage(url);
+    } catch {
+      toast({ title: "Upload failed", description: "Could not upload image. Try a URL instead.", variant: "destructive" });
+    } finally {
+      setImageUploading(false);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    }
+  };
 
   const openItemDialog = (item?: MenuItem) => {
     if (item) {
@@ -364,8 +385,61 @@ export default function AdminMenu() {
               <Textarea value={itemDesc} onChange={e => setItemDesc(e.target.value)} rows={3} />
             </div>
             <div className="space-y-2">
-              <Label>Image URL</Label>
-              <Input value={itemImage} onChange={e => setItemImage(e.target.value)} placeholder="/images/menu/espresso.png" />
+              <Label>Foto Menu</Label>
+              {/* Hidden file input */}
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={handleImageFileChange}
+              />
+              {/* Image preview */}
+              {itemImage ? (
+                <div className="relative w-full h-40 rounded-lg overflow-hidden border border-border bg-muted">
+                  <img src={itemImage} alt="preview" className="w-full h-full object-cover" />
+                  <button
+                    type="button"
+                    onClick={() => setItemImage("")}
+                    className="absolute top-2 right-2 bg-black/60 hover:bg-black/80 text-white rounded-full p-1 transition-colors"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+              ) : (
+                <div
+                  className="w-full h-40 rounded-lg border-2 border-dashed border-border bg-muted/50 flex flex-col items-center justify-center gap-2 cursor-pointer hover:bg-muted transition-colors"
+                  onClick={() => fileInputRef.current?.click()}
+                >
+                  <ImageIcon className="w-8 h-8 text-muted-foreground" />
+                  <p className="text-sm text-muted-foreground font-medium">Klik untuk pilih foto</p>
+                  <p className="text-xs text-muted-foreground">JPG, PNG, WebP — maks 5 MB</p>
+                </div>
+              )}
+              {/* Upload button + URL fallback */}
+              <div className="flex gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="shrink-0"
+                  disabled={imageUploading}
+                  onClick={() => fileInputRef.current?.click()}
+                >
+                  {imageUploading ? (
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  ) : (
+                    <Upload className="w-4 h-4 mr-2" />
+                  )}
+                  {imageUploading ? "Uploading..." : "Upload Foto"}
+                </Button>
+                <Input
+                  value={itemImage}
+                  onChange={e => setItemImage(e.target.value)}
+                  placeholder="atau paste URL gambar..."
+                  className="text-xs"
+                />
+              </div>
             </div>
           </div>
           <DialogFooter className="flex-col sm:flex-row gap-2">
