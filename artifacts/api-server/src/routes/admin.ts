@@ -291,6 +291,33 @@ router.get("/admin/item-sales", async (req, res): Promise<void> => {
   res.json(result);
 });
 
+router.get("/admin/leaderboard", async (req, res): Promise<void> => {
+  const month = typeof req.query.month === "string" ? req.query.month : undefined;
+  const range = month ? parseMonthRange(month) : null;
+
+  const conditions = [];
+  if (range) {
+    conditions.push(gte(ordersTable.createdAt, range.start));
+    conditions.push(lte(ordersTable.createdAt, range.end));
+  }
+
+  const rows = await db
+    .select({
+      customerName: ordersTable.customerName,
+      customerPhone: ordersTable.customerPhone,
+      totalSpent: sql<number>`sum(${ordersTable.total})::float`,
+      orderCount: sql<number>`count(*)::int`,
+      lastOrderAt: sql<string>`max(${ordersTable.createdAt})::text`,
+    })
+    .from(ordersTable)
+    .where(conditions.length > 0 ? and(...conditions) : undefined)
+    .groupBy(ordersTable.customerName, ordersTable.customerPhone)
+    .orderBy(desc(sql`sum(${ordersTable.total})`));
+
+  const ranked = rows.map((r, i) => ({ ...r, rank: i + 1 }));
+  res.json(ranked);
+});
+
 router.get("/admin/monthly-revenue", async (_req, res): Promise<void> => {
   const rows = await db
     .select({

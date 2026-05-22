@@ -10,7 +10,8 @@ import {
   Moon,
   Sun,
   Menu,
-  X
+  X,
+  Trophy
 } from "lucide-react";
 import { useTheme } from "@/hooks/use-theme";
 import { Button } from "@/components/ui/button";
@@ -35,6 +36,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
     { href: "/admin/kitchen", label: "Kitchen", icon: ChefHat },
     { href: "/admin/menu", label: "Menu", icon: MenuSquare },
     { href: "/admin/orders", label: "Orders", icon: ListOrdered },
+    { href: "/admin/leaderboard", label: "Leaderboard", icon: Trophy },
   ];
 
   return (

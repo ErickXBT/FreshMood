@@ -232,6 +232,16 @@ export interface MonthlyRevenue {
   orderCount: number;
 }
 
+export interface CustomerLeaderboard {
+  rank: number;
+  customerName: string;
+  /** @nullable */
+  customerPhone?: string | null;
+  totalSpent: number;
+  orderCount: number;
+  lastOrderAt?: string;
+}
+
 export interface AdminLoginInput {
   username: string;
   password: string;
@@ -294,6 +304,13 @@ month?: string;
 };
 
 export type GetItemSalesParams = {
+/**
+ * Filter by month in YYYY-MM format
+ */
+month?: string;
+};
+
+export type GetLeaderboardParams = {
 /**
  * Filter by month in YYYY-MM format
  */

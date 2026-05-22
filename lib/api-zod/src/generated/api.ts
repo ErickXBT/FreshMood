@@ -482,6 +482,24 @@ export const GetMonthlyRevenueResponse = zod.array(GetMonthlyRevenueResponseItem
 
 
 /**
+ * @summary Get customer leaderboard ranked by total spending
+ */
+export const GetLeaderboardQueryParams = zod.object({
+  "month": zod.coerce.string().optional().describe('Filter by month in YYYY-MM format')
+})
+
+export const GetLeaderboardResponseItem = zod.object({
+  "rank": zod.number(),
+  "customerName": zod.string(),
+  "customerPhone": zod.string().nullish(),
+  "totalSpent": zod.number(),
+  "orderCount": zod.number(),
+  "lastOrderAt": zod.string().optional()
+})
+export const GetLeaderboardResponse = zod.array(GetLeaderboardResponseItem)
+
+
+/**
  * @summary Admin login
  */
 export const AdminLoginBody = zod.object({

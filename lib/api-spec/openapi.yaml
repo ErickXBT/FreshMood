@@ -515,6 +515,27 @@ paths:
                 items:
                   $ref: "#/components/schemas/MonthlyRevenue"
 
+  /admin/leaderboard:
+    get:
+      operationId: getLeaderboard
+      tags: [admin]
+      summary: Get customer leaderboard ranked by total spending
+      parameters:
+        - name: month
+          in: query
+          description: Filter by month in YYYY-MM format
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Customer leaderboard
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/CustomerLeaderboard"
+
   /admin/login:
     post:
       operationId: adminLogin
@@ -869,6 +890,23 @@ components:
           type: number
         orderCount:
           type: integer
+
+    CustomerLeaderboard:
+      type: object
+      required: [customerName, totalSpent, orderCount, rank]
+      properties:
+        rank:
+          type: integer
+        customerName:
+          type: string
+        customerPhone:
+          type: ["string", "null"]
+        totalSpent:
+          type: number
+        orderCount:
+          type: integer
+        lastOrderAt:
+          type: string
 
     AdminLoginInput:
       type: object

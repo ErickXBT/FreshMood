@@ -13,6 +13,7 @@ import AdminDashboard from "@/pages/admin/dashboard";
 import AdminKitchen from "@/pages/admin/kitchen";
 import AdminMenu from "@/pages/admin/menu";
 import AdminOrders from "@/pages/admin/orders";
+import AdminLeaderboard from "@/pages/admin/leaderboard";
 
 import CustomerMenu from "@/pages/customer/menu";
 import Checkout from "@/pages/customer/checkout";
@@ -54,6 +55,7 @@ function Router() {
       <Route path="/admin/kitchen" component={AdminKitchen} />
       <Route path="/admin/menu" component={AdminMenu} />
       <Route path="/admin/orders" component={AdminOrders} />
+      <Route path="/admin/leaderboard" component={AdminLeaderboard} />
 
       <Route component={NotFound} />
     </Switch>
