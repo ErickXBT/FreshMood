@@ -325,22 +325,11 @@ export default function AdminOrders() {
                     <span className="text-muted-foreground">Subtotal</span>
                     <span>{formatRupiah(selectedOrder.subtotal)}</span>
                   </div>
-                  {selectedOrder.paymentMethod === "DELIVERY_CASH" ? (
+                  {selectedOrder.paymentMethod === "DELIVERY_CASH" && (
                     <div className="flex justify-between text-sm">
                       <span className="text-muted-foreground">Delivery Fee</span>
                       <span>{formatRupiah(selectedOrder.serviceFee)}</span>
                     </div>
-                  ) : (
-                    <>
-                      <div className="flex justify-between text-sm">
-                        <span className="text-muted-foreground">Tax (10%)</span>
-                        <span>{formatRupiah(selectedOrder.tax)}</span>
-                      </div>
-                      <div className="flex justify-between text-sm">
-                        <span className="text-muted-foreground">Service Fee (5%)</span>
-                        <span>{formatRupiah(selectedOrder.serviceFee)}</span>
-                      </div>
-                    </>
                   )}
                   <div className="flex justify-between font-bold text-lg pt-2 border-t mt-2">
                     <span>Total</span>

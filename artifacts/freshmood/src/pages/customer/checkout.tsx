@@ -45,9 +45,9 @@ export default function Checkout() {
     }
   }, [items.length, setLocation]);
 
-  const tax = subtotal * 0.10;
-  const serviceFee = subtotal * 0.05;
-  const total = subtotal + tax + serviceFee;
+  const isDeliveryCash = paymentMethod === "DELIVERY_CASH";
+  const deliveryFee = isDeliveryCash ? 5000 : 0;
+  const total = subtotal + deliveryFee;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -139,14 +139,12 @@ export default function Checkout() {
                 <span>Subtotal</span>
                 <span>{formatRupiah(subtotal)}</span>
               </div>
-              <div className="flex justify-between text-muted-foreground">
-                <span>Tax (10%)</span>
-                <span>{formatRupiah(tax)}</span>
-              </div>
-              <div className="flex justify-between text-muted-foreground">
-                <span>Service Fee (5%)</span>
-                <span>{formatRupiah(serviceFee)}</span>
-              </div>
+              {isDeliveryCash && (
+                <div className="flex justify-between text-muted-foreground">
+                  <span>Delivery Fee</span>
+                  <span>{formatRupiah(deliveryFee)}</span>
+                </div>
+              )}
               <Separator className="my-2" />
               <div className="flex justify-between text-lg font-bold">
                 <span>Total</span>

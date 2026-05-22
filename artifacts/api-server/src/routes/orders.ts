@@ -108,11 +108,8 @@ router.post("/orders", async (req, res): Promise<void> => {
   }
 
   const isDeliveryCash = paymentMethod === "DELIVERY_CASH";
-  const taxRate = isDeliveryCash ? 0 : 0.1;
-  const serviceFeeRate = isDeliveryCash ? 0 : 0.05;
-  const deliveryFee = isDeliveryCash ? 5000 : 0;
-  const tax = subtotal * taxRate;
-  const serviceFee = isDeliveryCash ? deliveryFee : subtotal * serviceFeeRate;
+  const tax = 0;
+  const serviceFee = isDeliveryCash ? 5000 : 0;
   const total = subtotal + tax + serviceFee;
 
   const [order] = await db

@@ -221,22 +221,11 @@ export default function OrderStatusPage() {
               <span>Subtotal</span>
               <span>{formatRupiah(order.subtotal)}</span>
             </div>
-            {isDelivery ? (
+            {isDelivery && (
               <div className="flex justify-between text-sm text-muted-foreground">
                 <span>Delivery Fee</span>
                 <span>{formatRupiah(order.serviceFee)}</span>
               </div>
-            ) : (
-              <>
-                <div className="flex justify-between text-sm text-muted-foreground">
-                  <span>Tax (10%)</span>
-                  <span>{formatRupiah(order.tax)}</span>
-                </div>
-                <div className="flex justify-between text-sm text-muted-foreground">
-                  <span>Service Fee (5%)</span>
-                  <span>{formatRupiah(order.serviceFee)}</span>
-                </div>
-              </>
             )}
             <div className="flex justify-between font-bold text-base pt-2 border-t border-border">
               <span>Total Paid</span>
