@@ -1,9 +1,14 @@
 import { Router, type IRouter } from "express";
 import { eq, sql, desc, gte, and, lte, inArray } from "drizzle-orm";
-import { db, ordersTable, orderItemsTable, menuItemsTable } from "@workspace/db";
+import { db, ordersTable, orderItemsTable, menuItemsTable, adminAccountsTable } from "@workspace/db";
+import bcrypt from "bcryptjs";
+import { Resend } from "resend";
 import {
   AdminLoginBody,
   AdminLoginResponse,
+  AdminRegisterBody,
+  AdminForgotPasswordBody,
+  AdminResetPasswordBody,
   GetDashboardSummaryResponse,
   GetTopMenuItemsQueryParams,
   GetTopMenuItemsResponse,
@@ -14,9 +19,10 @@ import {
 } from "@workspace/api-zod";
 
 const router: IRouter = Router();
+const resend = new Resend(process.env.RESEND_API_KEY);
 
-const ADMIN_USERNAME = "freshmood";
-const ADMIN_PASSWORD = "037425";
+const LEGACY_USERNAME = "freshmood";
+const LEGACY_PASSWORD = "037425";
 
 function parseMonthRange(month: string): { start: Date; end: Date } | null {
   const match = month.match(/^(\d{4})-(\d{2})$/);
@@ -28,22 +34,159 @@ function parseMonthRange(month: string): { start: Date; end: Date } | null {
   return { start, end };
 }
 
+router.post("/admin/register", async (req, res): Promise<void> => {
+  const parsed = AdminRegisterBody.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: "Username, email, dan password wajib diisi" });
+    return;
+  }
+  const { username, email, password } = parsed.data;
+  if (password.length < 6) {
+    res.status(400).json({ error: "Password minimal 6 karakter" });
+    return;
+  }
+  const existing = await db
+    .select()
+    .from(adminAccountsTable)
+    .where(eq(adminAccountsTable.username, username))
+    .limit(1);
+  if (existing.length > 0) {
+    res.status(400).json({ error: "Username sudah digunakan" });
+    return;
+  }
+  const existingEmail = await db
+    .select()
+    .from(adminAccountsTable)
+    .where(eq(adminAccountsTable.email, email))
+    .limit(1);
+  if (existingEmail.length > 0) {
+    res.status(400).json({ error: "Email sudah digunakan" });
+    return;
+  }
+  const passwordHash = await bcrypt.hash(password, 10);
+  await db.insert(adminAccountsTable).values({ username, email, passwordHash });
+  res.json(
+    AdminLoginResponse.parse({
+      token: `fm-token-${Date.now()}`,
+      username,
+    })
+  );
+});
+
+router.post("/admin/forgot-password", async (req, res): Promise<void> => {
+  const parsed = AdminForgotPasswordBody.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: "Email tidak valid" });
+    return;
+  }
+  const { email } = parsed.data;
+  const accounts = await db
+    .select()
+    .from(adminAccountsTable)
+    .where(eq(adminAccountsTable.email, email))
+    .limit(1);
+  if (accounts.length === 0) {
+    res.status(404).json({ error: "Email tidak ditemukan" });
+    return;
+  }
+  const otp = Math.floor(100000 + Math.random() * 900000).toString();
+  const expiresAt = new Date(Date.now() + 10 * 60 * 1000);
+  await db
+    .update(adminAccountsTable)
+    .set({ resetOtp: otp, resetOtpExpiresAt: expiresAt })
+    .where(eq(adminAccountsTable.email, email));
+  await resend.emails.send({
+    from: "FreshMood <onboarding@resend.dev>",
+    to: email,
+    subject: "Kode Reset Password FreshMood",
+    html: `
+      <div style="font-family:sans-serif;max-width:400px;margin:auto;padding:32px;background:#fff;">
+        <div style="text-align:center;margin-bottom:24px;">
+          <h1 style="color:#FFCC00;font-size:28px;margin:0;">FreshMood</h1>
+          <p style="color:#555;margin-top:6px;">Admin Portal</p>
+        </div>
+        <h2 style="font-size:18px;margin-bottom:8px;">Kode Reset Password</h2>
+        <p style="color:#555;font-size:14px;">Masukkan kode berikut untuk reset password kamu:</p>
+        <div style="background:#f5f5f5;border-radius:12px;padding:24px;text-align:center;margin:20px 0;">
+          <span style="font-size:40px;font-weight:900;letter-spacing:12px;color:#111;">${otp}</span>
+        </div>
+        <p style="color:#888;font-size:12px;">Kode berlaku selama <strong>10 menit</strong>. Jangan bagikan kode ini kepada siapapun.</p>
+        <hr style="border:none;border-top:1px solid #eee;margin:24px 0;"/>
+        <p style="color:#aaa;font-size:11px;text-align:center;">Email ini dikirim otomatis oleh FreshMood. Jika kamu tidak meminta reset password, abaikan email ini.</p>
+      </div>
+    `,
+  });
+  res.json({ message: "Kode OTP telah dikirim ke email kamu" });
+});
+
+router.post("/admin/reset-password", async (req, res): Promise<void> => {
+  const parsed = AdminResetPasswordBody.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: "Data tidak valid" });
+    return;
+  }
+  const { email, otp, newPassword } = parsed.data;
+  if (newPassword.length < 6) {
+    res.status(400).json({ error: "Password baru minimal 6 karakter" });
+    return;
+  }
+  const accounts = await db
+    .select()
+    .from(adminAccountsTable)
+    .where(eq(adminAccountsTable.email, email))
+    .limit(1);
+  if (accounts.length === 0) {
+    res.status(400).json({ error: "Email tidak ditemukan" });
+    return;
+  }
+  const account = accounts[0];
+  if (!account.resetOtp || account.resetOtp !== otp) {
+    res.status(400).json({ error: "Kode OTP tidak valid" });
+    return;
+  }
+  if (!account.resetOtpExpiresAt || new Date() > account.resetOtpExpiresAt) {
+    res.status(400).json({ error: "Kode OTP sudah kadaluarsa. Minta kode baru." });
+    return;
+  }
+  const passwordHash = await bcrypt.hash(newPassword, 10);
+  await db
+    .update(adminAccountsTable)
+    .set({ passwordHash, resetOtp: null, resetOtpExpiresAt: null })
+    .where(eq(adminAccountsTable.email, email));
+  res.json({ message: "Password berhasil direset. Silakan login." });
+});
+
 router.post("/admin/login", async (req, res): Promise<void> => {
   const parsed = AdminLoginBody.safeParse(req.body);
   if (!parsed.success) {
     res.status(400).json({ error: parsed.error.message });
     return;
   }
-  if (parsed.data.username !== ADMIN_USERNAME || parsed.data.password !== ADMIN_PASSWORD) {
-    res.status(401).json({ error: "Invalid credentials" });
+  const { username, password } = parsed.data;
+
+  // Check DB accounts first
+  const accounts = await db
+    .select()
+    .from(adminAccountsTable)
+    .where(eq(adminAccountsTable.username, username))
+    .limit(1);
+  if (accounts.length > 0) {
+    const valid = await bcrypt.compare(password, accounts[0].passwordHash);
+    if (!valid) {
+      res.status(401).json({ error: "Username atau password salah" });
+      return;
+    }
+    res.json(AdminLoginResponse.parse({ token: `fm-token-${Date.now()}`, username }));
     return;
   }
-  res.json(
-    AdminLoginResponse.parse({
-      token: `fm-token-${Date.now()}`,
-      username: ADMIN_USERNAME,
-    })
-  );
+
+  // Fallback to legacy hardcoded credentials
+  if (username === LEGACY_USERNAME && password === LEGACY_PASSWORD) {
+    res.json(AdminLoginResponse.parse({ token: `fm-token-${Date.now()}`, username }));
+    return;
+  }
+
+  res.status(401).json({ error: "Username atau password salah" });
 });
 
 router.get("/admin/dashboard-summary", async (req, res): Promise<void> => {
