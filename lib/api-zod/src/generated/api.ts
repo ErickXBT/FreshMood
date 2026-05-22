@@ -482,6 +482,26 @@ export const GetMonthlyRevenueResponse = zod.array(GetMonthlyRevenueResponseItem
 
 
 /**
+ * @summary Get revenue breakdown by payment method
+ */
+export const GetPaymentSummaryQueryParams = zod.object({
+  "month": zod.coerce.string().optional().describe('Filter by month in YYYY-MM format')
+})
+
+export const GetPaymentSummaryResponseItem = zod.object({
+  "paymentMethod": zod.string(),
+  "orderCount": zod.number(),
+  "totalRevenue": zod.number(),
+  "totalSubtotal": zod.number(),
+  "totalTax": zod.number(),
+  "totalServiceFee": zod.number(),
+  "avgOrderValue": zod.number(),
+  "revenueShare": zod.number()
+})
+export const GetPaymentSummaryResponse = zod.array(GetPaymentSummaryResponseItem)
+
+
+/**
  * @summary Get customer leaderboard ranked by total spending
  */
 export const GetLeaderboardQueryParams = zod.object({

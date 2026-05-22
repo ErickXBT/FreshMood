@@ -35,6 +35,7 @@ import type {
   GetDashboardSummaryParams,
   GetItemSalesParams,
   GetLeaderboardParams,
+  GetPaymentSummaryParams,
   GetRecentOrdersParams,
   GetRevenueByDayParams,
   GetTopMenuItemsParams,
@@ -51,6 +52,7 @@ import type {
   OrderStatusPatch,
   Payment,
   PaymentInput,
+  PaymentMethodSummary,
   RevenueByDay,
   Table,
   TableInput,
@@ -1973,6 +1975,90 @@ export function useGetMonthlyRevenue<TData = Awaited<ReturnType<typeof getMonthl
  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
 
   const queryOptions = getGetMonthlyRevenueQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getGetPaymentSummaryUrl = (params?: GetPaymentSummaryParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : value.toString())
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/admin/payment-summary?${stringifiedParams}` : `/api/admin/payment-summary`
+}
+
+/**
+ * @summary Get revenue breakdown by payment method
+ */
+export const getPaymentSummary = async (params?: GetPaymentSummaryParams, options?: RequestInit): Promise<PaymentMethodSummary[]> => {
+
+  return customFetch<PaymentMethodSummary[]>(getGetPaymentSummaryUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetPaymentSummaryQueryKey = (params?: GetPaymentSummaryParams,) => {
+    return [
+    `/api/admin/payment-summary`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getGetPaymentSummaryQueryOptions = <TData = Awaited<ReturnType<typeof getPaymentSummary>>, TError = ErrorType<unknown>>(params?: GetPaymentSummaryParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getPaymentSummary>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetPaymentSummaryQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getPaymentSummary>>> = ({ signal }) => getPaymentSummary(params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getPaymentSummary>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetPaymentSummaryQueryResult = NonNullable<Awaited<ReturnType<typeof getPaymentSummary>>>
+export type GetPaymentSummaryQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Get revenue breakdown by payment method
+ */
+
+export function useGetPaymentSummary<TData = Awaited<ReturnType<typeof getPaymentSummary>>, TError = ErrorType<unknown>>(
+ params?: GetPaymentSummaryParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getPaymentSummary>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetPaymentSummaryQueryOptions(params,options)
 
   const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
 

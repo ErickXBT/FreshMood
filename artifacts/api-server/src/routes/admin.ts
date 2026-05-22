@@ -434,6 +434,46 @@ router.get("/admin/item-sales", async (req, res): Promise<void> => {
   res.json(result);
 });
 
+router.get("/admin/payment-summary", async (req, res): Promise<void> => {
+  const month = typeof req.query.month === "string" ? req.query.month : undefined;
+  const range = month ? parseMonthRange(month) : null;
+
+  const conditions = [];
+  if (range) {
+    conditions.push(gte(ordersTable.createdAt, range.start));
+    conditions.push(lte(ordersTable.createdAt, range.end));
+  }
+
+  const rows = await db
+    .select({
+      paymentMethod: ordersTable.paymentMethod,
+      orderCount: sql<number>`count(*)::int`,
+      totalRevenue: sql<number>`sum(${ordersTable.total})::float`,
+      totalSubtotal: sql<number>`sum(${ordersTable.subtotal})::float`,
+      totalTax: sql<number>`sum(${ordersTable.tax})::float`,
+      totalServiceFee: sql<number>`sum(${ordersTable.serviceFee})::float`,
+    })
+    .from(ordersTable)
+    .where(conditions.length > 0 ? and(...conditions) : undefined)
+    .groupBy(ordersTable.paymentMethod)
+    .orderBy(desc(sql`sum(${ordersTable.total})`));
+
+  const grandTotal = rows.reduce((acc, r) => acc + r.totalRevenue, 0);
+
+  const result = rows.map((r) => ({
+    paymentMethod: r.paymentMethod ?? "UNKNOWN",
+    orderCount: r.orderCount,
+    totalRevenue: r.totalRevenue,
+    totalSubtotal: r.totalSubtotal,
+    totalTax: r.totalTax,
+    totalServiceFee: r.totalServiceFee,
+    avgOrderValue: r.orderCount > 0 ? r.totalRevenue / r.orderCount : 0,
+    revenueShare: grandTotal > 0 ? (r.totalRevenue / grandTotal) * 100 : 0,
+  }));
+
+  res.json(result);
+});
+
 router.get("/admin/leaderboard", async (req, res): Promise<void> => {
   const month = typeof req.query.month === "string" ? req.query.month : undefined;
   const range = month ? parseMonthRange(month) : null;

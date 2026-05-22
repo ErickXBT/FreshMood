@@ -515,6 +515,27 @@ paths:
                 items:
                   $ref: "#/components/schemas/MonthlyRevenue"
 
+  /admin/payment-summary:
+    get:
+      operationId: getPaymentSummary
+      tags: [admin]
+      summary: Get revenue breakdown by payment method
+      parameters:
+        - name: month
+          in: query
+          description: Filter by month in YYYY-MM format
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Payment summary by method
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/PaymentMethodSummary"
+
   /admin/leaderboard:
     get:
       operationId: getLeaderboard
@@ -961,6 +982,27 @@ components:
           type: number
         orderCount:
           type: integer
+
+    PaymentMethodSummary:
+      type: object
+      required: [paymentMethod, orderCount, totalRevenue, totalSubtotal, totalTax, totalServiceFee, avgOrderValue, revenueShare]
+      properties:
+        paymentMethod:
+          type: string
+        orderCount:
+          type: integer
+        totalRevenue:
+          type: number
+        totalSubtotal:
+          type: number
+        totalTax:
+          type: number
+        totalServiceFee:
+          type: number
+        avgOrderValue:
+          type: number
+        revenueShare:
+          type: number
 
     CustomerLeaderboard:
       type: object

@@ -232,6 +232,17 @@ export interface MonthlyRevenue {
   orderCount: number;
 }
 
+export interface PaymentMethodSummary {
+  paymentMethod: string;
+  orderCount: number;
+  totalRevenue: number;
+  totalSubtotal: number;
+  totalTax: number;
+  totalServiceFee: number;
+  avgOrderValue: number;
+  revenueShare: number;
+}
+
 export interface CustomerLeaderboard {
   rank: number;
   customerName: string;
@@ -320,6 +331,13 @@ month?: string;
 };
 
 export type GetItemSalesParams = {
+/**
+ * Filter by month in YYYY-MM format
+ */
+month?: string;
+};
+
+export type GetPaymentSummaryParams = {
 /**
  * Filter by month in YYYY-MM format
  */
