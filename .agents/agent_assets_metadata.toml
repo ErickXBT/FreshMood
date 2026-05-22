@@ -144,3 +144,81 @@ id = "n69gog_jlgTjbPL5FrZ5X"
 uri = "file://attached_assets/menu/creamy-latte.png"
 type = "image"
 title = "creamy latte coffee"
+
+[[generated]]
+id = "ObMlCxXi4XDzpVDy2gJWD"
+uri = "file://artifacts/freshmood/public/images/menu/pisang-sambal.png"
+type = "image"
+title = "generated_image"
+
+[[generated]]
+id = "j0WSU90pWpUGSrN1AI_Tn"
+uri = "file://artifacts/freshmood/public/images/menu/sosis-goreng-mentega.png"
+type = "image"
+title = "generated_image"
+
+[[generated]]
+id = "2Xn_CQ1oie9d_jXfBem1I"
+uri = "file://artifacts/freshmood/public/images/menu/kebab.png"
+type = "image"
+title = "generated_image"
+
+[[generated]]
+id = "J3riLSSUOEVnR09BR094g"
+uri = "file://artifacts/freshmood/public/images/menu/nasi-kulit-remes.png"
+type = "image"
+title = "generated_image"
+
+[[generated]]
+id = "ap-oSWv8Jv8NUSaKdGbsk"
+uri = "file://artifacts/freshmood/public/images/menu/matcha-berry.png"
+type = "image"
+title = "generated_image"
+
+[[generated]]
+id = "JD-fgLkrghxhDYJBgwOdS"
+uri = "file://artifacts/freshmood/public/images/menu/melon-squash.png"
+type = "image"
+title = "generated_image"
+
+[[generated]]
+id = "NjUy9uz0nTOUKCSdpv2hi"
+uri = "file://artifacts/freshmood/public/images/menu/lemonade-squash.png"
+type = "image"
+title = "generated_image"
+
+[[generated]]
+id = "3GJqrZZZqjBYDgwiRc6o2"
+uri = "file://artifacts/freshmood/public/images/menu/pineapple-mix-berry.png"
+type = "image"
+title = "generated_image"
+
+[[generated]]
+id = "klcNRzTo5KwrkQNKxieHz"
+uri = "file://artifacts/freshmood/public/images/menu/manggo-sunset.png"
+type = "image"
+title = "generated_image"
+
+[[generated]]
+id = "fPqk3iPOrXDBxcyO3iI0h"
+uri = "file://artifacts/freshmood/public/images/menu/tropical-delight.png"
+type = "image"
+title = "generated_image"
+
+[[generated]]
+id = "m5YkA4OOvmI4k29o-YeAH"
+uri = "file://artifacts/freshmood/public/images/menu/americano.png"
+type = "image"
+title = "generated_image"
+
+[[generated]]
+id = "RzXEr-7b6zREao_dBeGTs"
+uri = "file://artifacts/freshmood/public/images/menu/dirty-latte.png"
+type = "image"
+title = "generated_image"
+
+[[generated]]
+id = "wi2ubcjt9LGn98bP87cCT"
+uri = "file://artifacts/freshmood/public/images/menu/peanut-butter-latte.png"
+type = "image"
+title = "generated_image"
