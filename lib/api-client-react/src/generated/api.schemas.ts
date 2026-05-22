@@ -253,6 +253,10 @@ export interface CustomerLeaderboard {
   lastOrderAt?: string;
 }
 
+export interface AdminResetDataInput {
+  password: string;
+}
+
 export interface AdminRegisterInput {
   username: string;
   email: string;
@@ -349,6 +353,11 @@ export type GetLeaderboardParams = {
  * Filter by month in YYYY-MM format
  */
 month?: string;
+};
+
+export type AdminResetData200 = {
+  message: string;
+  deletedOrders: number;
 };
 
 export type AdminForgotPassword200 = {

@@ -557,6 +557,33 @@ paths:
                 items:
                   $ref: "#/components/schemas/CustomerLeaderboard"
 
+  /admin/reset-data:
+    post:
+      operationId: adminResetData
+      tags: [admin]
+      summary: Reset all sales data (orders, payments, order items) — irreversible
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AdminResetDataInput"
+      responses:
+        "200":
+          description: Data reset success
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [message, deletedOrders]
+                properties:
+                  message:
+                    type: string
+                  deletedOrders:
+                    type: integer
+        "401":
+          description: Wrong password
+
   /admin/register:
     post:
       operationId: adminRegister
@@ -1019,6 +1046,13 @@ components:
         orderCount:
           type: integer
         lastOrderAt:
+          type: string
+
+    AdminResetDataInput:
+      type: object
+      required: [password]
+      properties:
+        password:
           type: string
 
     AdminRegisterInput:

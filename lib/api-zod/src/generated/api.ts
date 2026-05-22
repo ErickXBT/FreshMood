@@ -520,6 +520,19 @@ export const GetLeaderboardResponse = zod.array(GetLeaderboardResponseItem)
 
 
 /**
+ * @summary Reset all sales data (orders, payments, order items) — irreversible
+ */
+export const AdminResetDataBody = zod.object({
+  "password": zod.string()
+})
+
+export const AdminResetDataResponse = zod.object({
+  "message": zod.string(),
+  "deletedOrders": zod.number()
+})
+
+
+/**
  * @summary Register a new admin account
  */
 export const AdminRegisterBody = zod.object({

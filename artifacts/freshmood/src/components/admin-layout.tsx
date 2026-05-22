@@ -12,7 +12,8 @@ import {
   Menu,
   X,
   Trophy,
-  CreditCard
+  CreditCard,
+  Settings
 } from "lucide-react";
 import { useTheme } from "@/hooks/use-theme";
 import { Button } from "@/components/ui/button";
@@ -39,6 +40,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
     { href: "/admin/orders", label: "Orders", icon: ListOrdered },
     { href: "/admin/leaderboard", label: "Leaderboard", icon: Trophy },
     { href: "/admin/payments", label: "Payments", icon: CreditCard },
+    { href: "/admin/settings", label: "Settings", icon: Settings },
   ];
 
   return (

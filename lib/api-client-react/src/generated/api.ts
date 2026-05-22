@@ -25,6 +25,8 @@ import type {
   AdminLoginInput,
   AdminLoginResult,
   AdminRegisterInput,
+  AdminResetData200,
+  AdminResetDataInput,
   AdminResetPassword200,
   AdminResetPasswordInput,
   Category,
@@ -2154,6 +2156,77 @@ export function useGetLeaderboard<TData = Awaited<ReturnType<typeof getLeaderboa
 
 
 
+
+export const getAdminResetDataUrl = () => {
+
+
+
+
+  return `/api/admin/reset-data`
+}
+
+/**
+ * @summary Reset all sales data (orders, payments, order items) — irreversible
+ */
+export const adminResetData = async (adminResetDataInput: AdminResetDataInput, options?: RequestInit): Promise<AdminResetData200> => {
+
+  return customFetch<AdminResetData200>(getAdminResetDataUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      adminResetDataInput,)
+  }
+);}
+
+
+
+
+export const getAdminResetDataMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adminResetData>>, TError,{data: BodyType<AdminResetDataInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof adminResetData>>, TError,{data: BodyType<AdminResetDataInput>}, TContext> => {
+
+const mutationKey = ['adminResetData'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof adminResetData>>, {data: BodyType<AdminResetDataInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  adminResetData(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type AdminResetDataMutationResult = NonNullable<Awaited<ReturnType<typeof adminResetData>>>
+    export type AdminResetDataMutationBody = BodyType<AdminResetDataInput>
+    export type AdminResetDataMutationError = ErrorType<void>
+
+    /**
+ * @summary Reset all sales data (orders, payments, order items) — irreversible
+ */
+export const useAdminResetData = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adminResetData>>, TError,{data: BodyType<AdminResetDataInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof adminResetData>>,
+        TError,
+        {data: BodyType<AdminResetDataInput>},
+        TContext
+      > => {
+      return useMutation(getAdminResetDataMutationOptions(options));
+    }
 
 export const getAdminRegisterUrl = () => {
 

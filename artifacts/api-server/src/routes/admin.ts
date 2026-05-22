@@ -34,6 +34,45 @@ function parseMonthRange(month: string): { start: Date; end: Date } | null {
   return { start, end };
 }
 
+router.post("/admin/reset-data", async (req, res): Promise<void> => {
+  const { password } = req.body ?? {};
+  if (!password) {
+    res.status(400).json({ error: "Password wajib diisi" });
+    return;
+  }
+
+  // Get username from auth header token (stored as fm-token-{timestamp})
+  // Verify against DB accounts first, then legacy
+  const authHeader = req.headers.authorization ?? "";
+  const token = authHeader.replace("Bearer ", "").trim();
+
+  // Try to find which account is logged in via username in body or just verify password
+  // We verify password against ALL accounts and legacy
+  const accounts = await db.select().from(adminAccountsTable);
+  let verified = false;
+  for (const account of accounts) {
+    if (await bcrypt.compare(password, account.passwordHash)) {
+      verified = true;
+      break;
+    }
+  }
+  if (!verified && password === LEGACY_PASSWORD) {
+    verified = true;
+  }
+  if (!verified) {
+    res.status(401).json({ error: "Password salah. Reset dibatalkan." });
+    return;
+  }
+
+  // Delete all orders (cascade handles order_items and payments)
+  const deleted = await db.delete(ordersTable).returning({ id: ordersTable.id });
+
+  res.json({
+    message: `Semua data berhasil direset. ${deleted.length} order dihapus.`,
+    deletedOrders: deleted.length,
+  });
+});
+
 router.post("/admin/register", async (req, res): Promise<void> => {
   const parsed = AdminRegisterBody.safeParse(req.body);
   if (!parsed.success) {
