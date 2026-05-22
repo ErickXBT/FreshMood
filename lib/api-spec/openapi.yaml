@@ -536,6 +536,77 @@ paths:
                 items:
                   $ref: "#/components/schemas/CustomerLeaderboard"
 
+  /admin/register:
+    post:
+      operationId: adminRegister
+      tags: [admin]
+      summary: Register a new admin account
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AdminRegisterInput"
+      responses:
+        "200":
+          description: Registration success
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminLoginResult"
+        "400":
+          description: Validation error or username/email already taken
+
+  /admin/forgot-password:
+    post:
+      operationId: adminForgotPassword
+      tags: [admin]
+      summary: Send OTP code to email for password reset
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AdminForgotPasswordInput"
+      responses:
+        "200":
+          description: OTP sent
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [message]
+                properties:
+                  message:
+                    type: string
+        "404":
+          description: Email not found
+
+  /admin/reset-password:
+    post:
+      operationId: adminResetPassword
+      tags: [admin]
+      summary: Reset password using OTP code
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AdminResetPasswordInput"
+      responses:
+        "200":
+          description: Password reset success
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [message]
+                properties:
+                  message:
+                    type: string
+        "400":
+          description: Invalid or expired OTP
+
   /admin/login:
     post:
       operationId: adminLogin
@@ -906,6 +977,35 @@ components:
         orderCount:
           type: integer
         lastOrderAt:
+          type: string
+
+    AdminRegisterInput:
+      type: object
+      required: [username, email, password]
+      properties:
+        username:
+          type: string
+        email:
+          type: string
+        password:
+          type: string
+
+    AdminForgotPasswordInput:
+      type: object
+      required: [email]
+      properties:
+        email:
+          type: string
+
+    AdminResetPasswordInput:
+      type: object
+      required: [email, otp, newPassword]
+      properties:
+        email:
+          type: string
+        otp:
+          type: string
+        newPassword:
           type: string
 
     AdminLoginInput:

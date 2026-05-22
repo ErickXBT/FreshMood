@@ -500,6 +500,47 @@ export const GetLeaderboardResponse = zod.array(GetLeaderboardResponseItem)
 
 
 /**
+ * @summary Register a new admin account
+ */
+export const AdminRegisterBody = zod.object({
+  "username": zod.string(),
+  "email": zod.string(),
+  "password": zod.string()
+})
+
+export const AdminRegisterResponse = zod.object({
+  "token": zod.string(),
+  "username": zod.string()
+})
+
+
+/**
+ * @summary Send OTP code to email for password reset
+ */
+export const AdminForgotPasswordBody = zod.object({
+  "email": zod.string()
+})
+
+export const AdminForgotPasswordResponse = zod.object({
+  "message": zod.string()
+})
+
+
+/**
+ * @summary Reset password using OTP code
+ */
+export const AdminResetPasswordBody = zod.object({
+  "email": zod.string(),
+  "otp": zod.string(),
+  "newPassword": zod.string()
+})
+
+export const AdminResetPasswordResponse = zod.object({
+  "message": zod.string()
+})
+
+
+/**
  * @summary Admin login
  */
 export const AdminLoginBody = zod.object({

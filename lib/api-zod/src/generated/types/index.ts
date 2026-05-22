@@ -6,8 +6,13 @@
  * OpenAPI spec version: 0.1.0
  */
 
+export * from './adminForgotPassword200';
+export * from './adminForgotPasswordInput';
 export * from './adminLoginInput';
 export * from './adminLoginResult';
+export * from './adminRegisterInput';
+export * from './adminResetPassword200';
+export * from './adminResetPasswordInput';
 export * from './category';
 export * from './categoryInput';
 export * from './categoryPatch';

@@ -242,6 +242,22 @@ export interface CustomerLeaderboard {
   lastOrderAt?: string;
 }
 
+export interface AdminRegisterInput {
+  username: string;
+  email: string;
+  password: string;
+}
+
+export interface AdminForgotPasswordInput {
+  email: string;
+}
+
+export interface AdminResetPasswordInput {
+  email: string;
+  otp: string;
+  newPassword: string;
+}
+
 export interface AdminLoginInput {
   username: string;
   password: string;
@@ -315,5 +331,13 @@ export type GetLeaderboardParams = {
  * Filter by month in YYYY-MM format
  */
 month?: string;
+};
+
+export type AdminForgotPassword200 = {
+  message: string;
+};
+
+export type AdminResetPassword200 = {
+  message: string;
 };
 
