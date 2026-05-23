@@ -8,11 +8,12 @@ import {
 } from "@workspace/api-client-react";
 import { formatRupiah } from "@/lib/format";
 import { useCart } from "@/hooks/use-cart";
+import { useTheme } from "@/hooks/use-theme";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
-import { Loader2, Search, ShoppingBag, Plus, Minus, Star, Utensils } from "lucide-react";
+import { Loader2, Search, ShoppingBag, Plus, Minus, Star, Utensils, Sun, Moon } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 export default function CustomerMenu() {
@@ -23,6 +24,7 @@ export default function CustomerMenu() {
   const [searchTerm, setSearchTerm] = useState("");
   const [, setLocation] = useLocation();
   const { items, addItem, updateQuantity, removeItem, subtotal, totalItems } = useCart();
+  const { theme, setTheme } = useTheme();
 
   useEffect(() => {
     if (tableParam) {
@@ -77,14 +79,46 @@ export default function CustomerMenu() {
               <p className="text-sm text-primary font-medium">Table {tableNumber}</p>
             )}
           </div>
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-            <Input 
-              placeholder="Search..." 
-              className="pl-9 w-32 md:w-48 h-9 rounded-full bg-muted/50 border-none focus-visible:ring-1"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
+          <div className="flex items-center gap-2">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              <Input 
+                placeholder="Search..." 
+                className="pl-9 w-32 md:w-48 h-9 rounded-full bg-muted/50 border-none focus-visible:ring-1"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+            </div>
+            <motion.button
+              whileTap={{ scale: 0.85 }}
+              onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+              className="w-9 h-9 rounded-full bg-muted/60 hover:bg-muted flex items-center justify-center transition-colors shrink-0"
+              aria-label="Toggle theme"
+            >
+              <AnimatePresence mode="wait" initial={false}>
+                {theme === "dark" ? (
+                  <motion.span
+                    key="sun"
+                    initial={{ rotate: -90, opacity: 0 }}
+                    animate={{ rotate: 0, opacity: 1 }}
+                    exit={{ rotate: 90, opacity: 0 }}
+                    transition={{ duration: 0.18 }}
+                  >
+                    <Sun className="w-4 h-4 text-primary" />
+                  </motion.span>
+                ) : (
+                  <motion.span
+                    key="moon"
+                    initial={{ rotate: 90, opacity: 0 }}
+                    animate={{ rotate: 0, opacity: 1 }}
+                    exit={{ rotate: -90, opacity: 0 }}
+                    transition={{ duration: 0.18 }}
+                  >
+                    <Moon className="w-4 h-4 text-foreground" />
+                  </motion.span>
+                )}
+              </AnimatePresence>
+            </motion.button>
           </div>
         </div>
 
