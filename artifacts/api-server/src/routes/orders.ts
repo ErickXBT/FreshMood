@@ -70,7 +70,7 @@ router.post("/orders", async (req, res): Promise<void> => {
     return;
   }
 
-  const { tableNumber, customerName, customerPhone, notes, orderType, deliveryAddress, paymentMethod, items } = parsed.data;
+  const { tableNumber, customerName, customerPhone, notes, orderType, deliveryAddress, deliveryFee: requestedDeliveryFee, paymentMethod, items } = parsed.data;
 
   // Read active cashier
   const [activeCashier] = await db
@@ -115,9 +115,14 @@ router.post("/orders", async (req, res): Promise<void> => {
     });
   }
 
-  const isDeliveryCash = paymentMethod === "DELIVERY_CASH";
   const tax = 0;
-  const serviceFee = isDeliveryCash ? 5000 : 0;
+  // For delivery orders: use the fee the customer selected (0 = free, 5000 = paid).
+  // Only allow the two valid values; default to 0 for non-delivery orders.
+  const ALLOWED_DELIVERY_FEES = [0, 5000];
+  const serviceFee =
+    orderType === "delivery" && requestedDeliveryFee !== undefined
+      ? ALLOWED_DELIVERY_FEES.includes(requestedDeliveryFee) ? requestedDeliveryFee : 0
+      : 0;
   const total = subtotal + tax + serviceFee;
 
   const [order] = await db

@@ -79,7 +79,7 @@ export default function AdminOrders() {
   );
 
   const filteredOrders = orders?.filter(o => 
-    searchTable ? o.tableNumber.toString().includes(searchTable) : true
+    searchTable ? (o.tableNumber?.toString() ?? "").includes(searchTable) : true
   ) || [];
 
   const getStatusColor = (status: string) => {

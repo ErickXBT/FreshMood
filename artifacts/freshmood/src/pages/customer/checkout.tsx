@@ -12,7 +12,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Separator } from "@/components/ui/separator";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { ChevronLeft, Loader2, Receipt, UtensilsCrossed, ShoppingBag, Bike } from "lucide-react";
+import { ChevronLeft, Loader2, Receipt, UtensilsCrossed, ShoppingBag, Bike, MapPin, Navigation } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 type OrderType = "dine_in" | "take_away" | "delivery";
@@ -21,6 +21,25 @@ const ORDER_TYPES: { id: OrderType; label: string; icon: React.ReactNode; desc: 
   { id: "dine_in",   label: "Dine In",   icon: <UtensilsCrossed className="w-4 h-4" />, desc: "Makan di tempat" },
   { id: "take_away", label: "Take Away", icon: <ShoppingBag className="w-4 h-4" />,     desc: "Bawa pulang" },
   { id: "delivery",  label: "Delivery",  icon: <Bike className="w-4 h-4" />,            desc: "Antar ke alamat" },
+];
+
+const DELIVERY_DISTANCE_OPTIONS = [
+  {
+    fee: 0,
+    label: "Jarak Terdekat",
+    sublabel: "Free Delivery",
+    icon: <Navigation className="w-4 h-4" />,
+    badge: "GRATIS",
+    badgeColor: "bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-400",
+  },
+  {
+    fee: 5000,
+    label: "Jarak Jauh",
+    sublabel: "Rp 5.000",
+    icon: <MapPin className="w-4 h-4" />,
+    badge: "Rp 5.000",
+    badgeColor: "bg-orange-100 text-orange-700 dark:bg-orange-900/40 dark:text-orange-400",
+  },
 ];
 
 const PAYMENT_METHODS = [
@@ -40,6 +59,7 @@ export default function Checkout() {
   const [customerName, setCustomerName] = useState("");
   const [customerPhone, setCustomerPhone] = useState("");
   const [deliveryAddress, setDeliveryAddress] = useState("");
+  const [deliveryFee, setDeliveryFee] = useState<number>(0);
   const [notes, setNotes] = useState("");
   const [paymentMethod, setPaymentMethod] = useState("QRIS");
 
@@ -55,9 +75,8 @@ export default function Checkout() {
     }
   }, [items.length, setLocation]);
 
-  const isDeliveryCash = paymentMethod === "DELIVERY_CASH";
-  const deliveryFee = isDeliveryCash ? 5000 : 0;
-  const total = subtotal + deliveryFee;
+  const activeDeliveryFee = orderType === "delivery" ? deliveryFee : 0;
+  const total = subtotal + activeDeliveryFee;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -80,6 +99,7 @@ export default function Checkout() {
           notes: notes || undefined,
           orderType,
           deliveryAddress: orderType === "delivery" ? deliveryAddress : undefined,
+          deliveryFee: orderType === "delivery" ? deliveryFee : undefined,
           paymentMethod,
           customerPhone: customerPhone || undefined,
           items: items.map(i => ({
@@ -146,10 +166,12 @@ export default function Checkout() {
                 <span>Subtotal</span>
                 <span>{formatRupiah(subtotal)}</span>
               </div>
-              {isDeliveryCash && (
+              {orderType === "delivery" && (
                 <div className="flex justify-between text-muted-foreground">
                   <span>Delivery Fee</span>
-                  <span>{formatRupiah(deliveryFee)}</span>
+                  <span className={activeDeliveryFee === 0 ? "text-green-600 font-semibold" : ""}>
+                    {activeDeliveryFee === 0 ? "Gratis" : formatRupiah(activeDeliveryFee)}
+                  </span>
                 </div>
               )}
               <Separator className="my-2" />
@@ -203,20 +225,55 @@ export default function Checkout() {
               </div>
             )}
 
-            {/* Delivery Address — only for Delivery */}
+            {/* Delivery section — only for Delivery */}
             {orderType === "delivery" && (
-              <div className="space-y-2">
-                <Label htmlFor="address">Alamat Pengiriman <span className="text-destructive">*</span></Label>
-                <Textarea
-                  id="address"
-                  placeholder="Masukkan alamat lengkap tujuan pengiriman..."
-                  value={deliveryAddress}
-                  onChange={(e) => setDeliveryAddress(e.target.value)}
-                  className="bg-muted/50 resize-none"
-                  rows={3}
-                  required
-                />
-              </div>
+              <>
+                {/* Delivery Distance / Fee Picker */}
+                <div className="space-y-2">
+                  <Label>Jarak Pengiriman</Label>
+                  <div className="grid grid-cols-2 gap-3">
+                    {DELIVERY_DISTANCE_OPTIONS.map(opt => (
+                      <button
+                        key={opt.fee}
+                        type="button"
+                        onClick={() => setDeliveryFee(opt.fee)}
+                        className={`flex flex-col items-center gap-2 p-4 rounded-xl border-2 text-center transition-all ${
+                          deliveryFee === opt.fee
+                            ? "border-primary bg-primary/10"
+                            : "border-border hover:bg-muted/50"
+                        }`}
+                      >
+                        <span className={`${deliveryFee === opt.fee ? "text-primary" : "text-muted-foreground"}`}>
+                          {opt.icon}
+                        </span>
+                        <div>
+                          <p className={`text-xs font-semibold ${deliveryFee === opt.fee ? "text-primary" : "text-foreground"}`}>
+                            {opt.label}
+                          </p>
+                          <span className={`inline-block mt-1 px-2 py-0.5 rounded-full text-[10px] font-bold ${opt.badgeColor}`}>
+                            {opt.badge}
+                          </span>
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                  <p className="text-[11px] text-muted-foreground">Pilih sesuai dengan perkiraan jarak lokasi Anda.</p>
+                </div>
+
+                {/* Delivery Address */}
+                <div className="space-y-2">
+                  <Label htmlFor="address">Alamat Pengiriman <span className="text-destructive">*</span></Label>
+                  <Textarea
+                    id="address"
+                    placeholder="Masukkan alamat lengkap tujuan pengiriman..."
+                    value={deliveryAddress}
+                    onChange={(e) => setDeliveryAddress(e.target.value)}
+                    className="bg-muted/50 resize-none"
+                    rows={3}
+                    required
+                  />
+                </div>
+              </>
             )}
 
             {/* Full Name */}

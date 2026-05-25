@@ -974,6 +974,9 @@ components:
           enum: [dine_in, take_away, delivery]
         deliveryAddress:
           type: string
+        deliveryFee:
+          type: integer
+          description: Delivery fee chosen by customer (0 for free, 5000 for paid)
         paymentMethod:
           type: string
         items:

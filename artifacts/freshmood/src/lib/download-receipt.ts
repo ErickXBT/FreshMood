@@ -33,7 +33,7 @@ const PAYMENT_LABELS: Record<string, string> = {
 };
 
 export async function downloadReceiptImage(order: ReceiptOrder) {
-  const isDelivery = order.paymentMethod === "DELIVERY_CASH";
+  const isDelivery = order.orderType === "delivery";
   const paymentLabel = PAYMENT_LABELS[order.paymentMethod ?? ""] ?? order.paymentMethod ?? "-";
 
   const itemsHtml = (order.items ?? [])

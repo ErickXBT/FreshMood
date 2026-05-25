@@ -248,6 +248,7 @@ export const CreateOrderBody = zod.object({
   "notes": zod.string().optional(),
   "orderType": zod.enum(['dine_in', 'take_away', 'delivery']).optional(),
   "deliveryAddress": zod.string().optional(),
+  "deliveryFee": zod.number().optional().describe('Delivery fee chosen by customer (0 for free, 5000 for paid)'),
   "paymentMethod": zod.string().optional(),
   "items": zod.array(zod.object({
   "menuItemId": zod.number(),

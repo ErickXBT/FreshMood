@@ -167,6 +167,8 @@ export interface OrderInput {
   notes?: string;
   orderType?: OrderInputOrderType;
   deliveryAddress?: string;
+  /** Delivery fee chosen by customer (0 for free, 5000 for paid) */
+  deliveryFee?: number;
   paymentMethod?: string;
   items: OrderItemInput[];
 }
