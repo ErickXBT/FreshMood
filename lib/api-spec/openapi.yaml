@@ -557,6 +557,85 @@ paths:
                 items:
                   $ref: "#/components/schemas/CustomerLeaderboard"
 
+  /admin/cashiers:
+    get:
+      operationId: listCashiers
+      tags: [admin]
+      summary: List all cashiers
+      responses:
+        "200":
+          description: List of cashiers
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Cashier"
+    post:
+      operationId: createCashier
+      tags: [admin]
+      summary: Create a new cashier
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CashierInput"
+      responses:
+        "200":
+          description: Created cashier
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Cashier"
+
+  /admin/cashiers/active:
+    get:
+      operationId: getActiveCashier
+      tags: [admin]
+      summary: Get the currently active cashier
+      responses:
+        "200":
+          description: Active cashier or null
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Cashier"
+
+  /admin/cashiers/activate:
+    post:
+      operationId: activateCashier
+      tags: [admin]
+      summary: Set or clear the active cashier
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ActivateCashierInput"
+      responses:
+        "200":
+          description: New active cashier or null
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Cashier"
+
+  /admin/cashiers/{id}:
+    delete:
+      operationId: deleteCashier
+      tags: [admin]
+      summary: Delete a cashier
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Deleted
+
   /admin/reset-data:
     post:
       operationId: adminResetData
@@ -855,6 +934,8 @@ components:
           type: number
         total:
           type: number
+        cashierName:
+          type: ["string", "null"]
         paymentMethod:
           type: ["string", "null"]
         paymentStatus:
@@ -1047,6 +1128,32 @@ components:
           type: integer
         lastOrderAt:
           type: string
+
+    Cashier:
+      type: object
+      required: [id, name, isActive, createdAt]
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        isActive:
+          type: boolean
+        createdAt:
+          type: string
+
+    CashierInput:
+      type: object
+      required: [name]
+      properties:
+        name:
+          type: string
+
+    ActivateCashierInput:
+      type: object
+      properties:
+        cashierId:
+          type: ["integer", "null"]
 
     AdminResetDataInput:
       type: object

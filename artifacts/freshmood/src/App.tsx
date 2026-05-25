@@ -16,6 +16,7 @@ import AdminOrders from "@/pages/admin/orders";
 import AdminLeaderboard from "@/pages/admin/leaderboard";
 import AdminPayments from "@/pages/admin/payments";
 import AdminSettings from "@/pages/admin/settings";
+import AdminEmployees from "@/pages/admin/employees";
 
 import CustomerMenu from "@/pages/customer/menu";
 import Checkout from "@/pages/customer/checkout";
@@ -60,6 +61,7 @@ function Router() {
       <Route path="/admin/leaderboard" component={AdminLeaderboard} />
       <Route path="/admin/payments" component={AdminPayments} />
       <Route path="/admin/settings" component={AdminSettings} />
+      <Route path="/admin/employees" component={AdminEmployees} />
 
       <Route component={NotFound} />
     </Switch>

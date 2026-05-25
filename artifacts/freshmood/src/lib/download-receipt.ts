@@ -8,6 +8,7 @@ export type ReceiptOrder = {
   tableNumber: number;
   createdAt: string;
   paymentMethod?: string | null;
+  cashierName?: string | null;
   subtotal: number;
   tax: number;
   serviceFee: number;
@@ -96,6 +97,11 @@ export async function downloadReceiptImage(order: ReceiptOrder) {
           <span style="color:#888;">Pembayaran</span>
           <span style="font-weight:600;">${paymentLabel}</span>
         </div>
+        ${order.cashierName ? `
+        <div style="display:flex;justify-content:space-between;padding:3px 0;">
+          <span style="color:#888;">Kasir</span>
+          <span style="font-weight:600;">${order.cashierName}</span>
+        </div>` : ""}
       </div>
 
       <!-- Dashed divider -->

@@ -23,6 +23,8 @@ export interface Order {
   serviceFee: number;
   total: number;
   /** @nullable */
+  cashierName?: string | null;
+  /** @nullable */
   paymentMethod?: string | null;
   paymentStatus?: OrderPaymentStatus;
   /** @nullable */

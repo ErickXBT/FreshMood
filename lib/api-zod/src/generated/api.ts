@@ -215,6 +215,7 @@ export const ListOrdersResponseItem = zod.object({
   "tax": zod.number(),
   "serviceFee": zod.number(),
   "total": zod.number(),
+  "cashierName": zod.string().nullish(),
   "paymentMethod": zod.string().nullish(),
   "paymentStatus": zod.enum(['unpaid', 'paid']).optional(),
   "estimatedMinutes": zod.number().nullish(),
@@ -270,6 +271,7 @@ export const GetOrderResponse = zod.object({
   "tax": zod.number(),
   "serviceFee": zod.number(),
   "total": zod.number(),
+  "cashierName": zod.string().nullish(),
   "paymentMethod": zod.string().nullish(),
   "paymentStatus": zod.enum(['unpaid', 'paid']).optional(),
   "estimatedMinutes": zod.number().nullish(),
@@ -312,6 +314,7 @@ export const UpdateOrderStatusResponse = zod.object({
   "tax": zod.number(),
   "serviceFee": zod.number(),
   "total": zod.number(),
+  "cashierName": zod.string().nullish(),
   "paymentMethod": zod.string().nullish(),
   "paymentStatus": zod.enum(['unpaid', 'paid']).optional(),
   "estimatedMinutes": zod.number().nullish(),
@@ -415,6 +418,7 @@ export const GetRecentOrdersResponseItem = zod.object({
   "tax": zod.number(),
   "serviceFee": zod.number(),
   "total": zod.number(),
+  "cashierName": zod.string().nullish(),
   "paymentMethod": zod.string().nullish(),
   "paymentStatus": zod.enum(['unpaid', 'paid']).optional(),
   "estimatedMinutes": zod.number().nullish(),
@@ -517,6 +521,67 @@ export const GetLeaderboardResponseItem = zod.object({
   "lastOrderAt": zod.string().optional()
 })
 export const GetLeaderboardResponse = zod.array(GetLeaderboardResponseItem)
+
+
+/**
+ * @summary List all cashiers
+ */
+export const ListCashiersResponseItem = zod.object({
+  "id": zod.number(),
+  "name": zod.string(),
+  "isActive": zod.boolean(),
+  "createdAt": zod.string()
+})
+export const ListCashiersResponse = zod.array(ListCashiersResponseItem)
+
+
+/**
+ * @summary Create a new cashier
+ */
+export const CreateCashierBody = zod.object({
+  "name": zod.string()
+})
+
+export const CreateCashierResponse = zod.object({
+  "id": zod.number(),
+  "name": zod.string(),
+  "isActive": zod.boolean(),
+  "createdAt": zod.string()
+})
+
+
+/**
+ * @summary Get the currently active cashier
+ */
+export const GetActiveCashierResponse = zod.object({
+  "id": zod.number(),
+  "name": zod.string(),
+  "isActive": zod.boolean(),
+  "createdAt": zod.string()
+})
+
+
+/**
+ * @summary Set or clear the active cashier
+ */
+export const ActivateCashierBody = zod.object({
+  "cashierId": zod.number().nullish()
+})
+
+export const ActivateCashierResponse = zod.object({
+  "id": zod.number(),
+  "name": zod.string(),
+  "isActive": zod.boolean(),
+  "createdAt": zod.string()
+})
+
+
+/**
+ * @summary Delete a cashier
+ */
+export const DeleteCashierParams = zod.object({
+  "id": zod.coerce.number()
+})
 
 
 /**

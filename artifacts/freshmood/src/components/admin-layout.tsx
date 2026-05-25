@@ -1,6 +1,8 @@
 import { ReactNode, useState } from "react";
 import { Link, useLocation } from "wouter";
 import { useAuth } from "@/hooks/use-auth";
+import { useActiveCashier } from "@/hooks/use-cashier";
+import SwitchCashierDialog from "@/components/switch-cashier-dialog";
 import { 
   LayoutDashboard, 
   ChefHat, 
@@ -13,7 +15,10 @@ import {
   X,
   Trophy,
   CreditCard,
-  Settings
+  Settings,
+  Users,
+  ArrowLeftRight,
+  UserX,
 } from "lucide-react";
 import { useTheme } from "@/hooks/use-theme";
 import { Button } from "@/components/ui/button";
@@ -27,6 +32,8 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
   const { logout, username } = useAuth();
   const { theme, setTheme } = useTheme();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [cashierDialogOpen, setCashierDialogOpen] = useState(false);
+  const { activeCashier } = useActiveCashier();
 
   const handleLogout = () => {
     logout();
@@ -40,6 +47,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
     { href: "/admin/orders", label: "Orders", icon: ListOrdered },
     { href: "/admin/leaderboard", label: "Leaderboard", icon: Trophy },
     { href: "/admin/payments", label: "Payments", icon: CreditCard },
+    { href: "/admin/employees", label: "Karyawan", icon: Users },
     { href: "/admin/settings", label: "Settings", icon: Settings },
   ];
 
@@ -71,7 +79,36 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
         </nav>
 
         <div className="p-4 border-t border-border mt-auto flex flex-col gap-2">
-          <div className="flex items-center justify-between mb-2 px-2">
+          {/* Switch Cashier */}
+          <button
+            onClick={() => setCashierDialogOpen(true)}
+            className={`w-full flex items-center gap-2 px-3 py-2.5 rounded-lg border transition-colors text-left ${
+              activeCashier
+                ? "bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800 hover:bg-green-100 dark:hover:bg-green-900/30"
+                : "bg-muted/50 border-dashed border-border hover:bg-muted"
+            }`}
+          >
+            {activeCashier ? (
+              <>
+                <div className="w-7 h-7 rounded-full bg-green-200 dark:bg-green-800 flex items-center justify-center shrink-0 text-xs font-bold text-green-800 dark:text-green-200">
+                  {activeCashier.name.charAt(0).toUpperCase()}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs text-muted-foreground leading-none mb-0.5">Kasir Aktif</p>
+                  <p className="text-xs font-semibold truncate text-green-700 dark:text-green-400">{activeCashier.name}</p>
+                </div>
+                <ArrowLeftRight size={14} className="text-muted-foreground shrink-0" />
+              </>
+            ) : (
+              <>
+                <UserX size={16} className="text-muted-foreground shrink-0" />
+                <span className="text-xs text-muted-foreground flex-1">Pilih Kasir Bertugas</span>
+                <ArrowLeftRight size={14} className="text-muted-foreground shrink-0" />
+              </>
+            )}
+          </button>
+
+          <div className="flex items-center justify-between px-2">
             <span className="text-sm font-medium">Hi, {username}</span>
             <Button variant="ghost" size="icon" onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}>
               {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
@@ -104,6 +141,8 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
       <main className="flex-1 overflow-auto pb-20 md:pb-0">
         {children}
       </main>
+
+      <SwitchCashierDialog open={cashierDialogOpen} onOpenChange={setCashierDialogOpen} />
 
       {/* ── Mobile Bottom Nav ── */}
       <nav className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-card border-t border-border flex">

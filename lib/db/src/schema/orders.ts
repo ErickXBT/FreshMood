@@ -13,6 +13,7 @@ export const ordersTable = pgTable("orders", {
   tax: numeric("tax", { precision: 12, scale: 2 }).notNull(),
   serviceFee: numeric("service_fee", { precision: 12, scale: 2 }).notNull(),
   total: numeric("total", { precision: 12, scale: 2 }).notNull(),
+  cashierName: text("cashier_name"),
   paymentMethod: text("payment_method"),
   paymentStatus: text("payment_status").notNull().default("unpaid"),
   estimatedMinutes: integer("estimated_minutes"),

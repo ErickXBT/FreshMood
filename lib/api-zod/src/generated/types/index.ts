@@ -6,6 +6,7 @@
  * OpenAPI spec version: 0.1.0
  */
 
+export * from './activateCashierInput';
 export * from './adminForgotPassword200';
 export * from './adminForgotPasswordInput';
 export * from './adminLoginInput';
@@ -15,6 +16,8 @@ export * from './adminResetData200';
 export * from './adminResetDataInput';
 export * from './adminResetPassword200';
 export * from './adminResetPasswordInput';
+export * from './cashier';
+export * from './cashierInput';
 export * from './category';
 export * from './categoryInput';
 export * from './categoryPatch';

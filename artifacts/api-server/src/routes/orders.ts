@@ -1,6 +1,6 @@
 import { Router, type IRouter } from "express";
 import { eq, and, desc } from "drizzle-orm";
-import { db, ordersTable, orderItemsTable, menuItemsTable } from "@workspace/db";
+import { db, ordersTable, orderItemsTable, menuItemsTable, cashiersTable } from "@workspace/db";
 import {
   CreateOrderBody,
   UpdateOrderStatusBody,
@@ -72,6 +72,14 @@ router.post("/orders", async (req, res): Promise<void> => {
 
   const { tableNumber, customerName, customerPhone, notes, paymentMethod, items } = parsed.data;
 
+  // Read active cashier
+  const [activeCashier] = await db
+    .select()
+    .from(cashiersTable)
+    .where(eq(cashiersTable.isActive, true))
+    .limit(1);
+  const cashierName = activeCashier?.name ?? null;
+
   // Calculate prices
   let subtotal = 0;
   const enrichedItems: Array<{
@@ -120,6 +128,7 @@ router.post("/orders", async (req, res): Promise<void> => {
       customerPhone: customerPhone ?? null,
       notes: notes ?? null,
       status: "pending",
+      cashierName,
       subtotal: String(subtotal),
       tax: String(tax),
       serviceFee: String(serviceFee),

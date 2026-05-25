@@ -243,10 +243,19 @@ export default function AdminOrders() {
                     <p className="text-xs text-muted-foreground mb-1">Date</p>
                     <p className="font-medium text-sm">{format(parseISO(selectedOrder.createdAt), "PPp")}</p>
                   </div>
-                  <div className="col-span-2">
+                  <div>
                     <p className="text-xs text-muted-foreground mb-1">Payment Method</p>
                     <PaymentBadge method={selectedOrder.paymentMethod} />
                   </div>
+                  {selectedOrder.cashierName && (
+                    <div>
+                      <p className="text-xs text-muted-foreground mb-1">Kasir</p>
+                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 border border-green-200 dark:border-green-800">
+                        <span className="w-1.5 h-1.5 rounded-full bg-green-500 inline-block" />
+                        {selectedOrder.cashierName}
+                      </span>
+                    </div>
+                  )}
                 </div>
 
                 <div className="border-t pt-4">

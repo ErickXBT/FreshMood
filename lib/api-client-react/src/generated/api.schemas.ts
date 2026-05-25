@@ -127,6 +127,8 @@ export interface Order {
   serviceFee: number;
   total: number;
   /** @nullable */
+  cashierName?: string | null;
+  /** @nullable */
   paymentMethod?: string | null;
   paymentStatus?: OrderPaymentStatus;
   /** @nullable */
@@ -251,6 +253,22 @@ export interface CustomerLeaderboard {
   totalSpent: number;
   orderCount: number;
   lastOrderAt?: string;
+}
+
+export interface Cashier {
+  id: number;
+  name: string;
+  isActive: boolean;
+  createdAt: string;
+}
+
+export interface CashierInput {
+  name: string;
+}
+
+export interface ActivateCashierInput {
+  /** @nullable */
+  cashierId?: number | null;
 }
 
 export interface AdminResetDataInput {

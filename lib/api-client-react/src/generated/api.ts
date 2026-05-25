@@ -20,6 +20,7 @@ import type {
 } from '@tanstack/react-query';
 
 import type {
+  ActivateCashierInput,
   AdminForgotPassword200,
   AdminForgotPasswordInput,
   AdminLoginInput,
@@ -29,6 +30,8 @@ import type {
   AdminResetDataInput,
   AdminResetPassword200,
   AdminResetPasswordInput,
+  Cashier,
+  CashierInput,
   Category,
   CategoryInput,
   CategoryPatch,
@@ -2156,6 +2159,372 @@ export function useGetLeaderboard<TData = Awaited<ReturnType<typeof getLeaderboa
 
 
 
+
+export const getListCashiersUrl = () => {
+
+
+
+
+  return `/api/admin/cashiers`
+}
+
+/**
+ * @summary List all cashiers
+ */
+export const listCashiers = async ( options?: RequestInit): Promise<Cashier[]> => {
+
+  return customFetch<Cashier[]>(getListCashiersUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListCashiersQueryKey = () => {
+    return [
+    `/api/admin/cashiers`
+    ] as const;
+    }
+
+
+export const getListCashiersQueryOptions = <TData = Awaited<ReturnType<typeof listCashiers>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listCashiers>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListCashiersQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listCashiers>>> = ({ signal }) => listCashiers({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listCashiers>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListCashiersQueryResult = NonNullable<Awaited<ReturnType<typeof listCashiers>>>
+export type ListCashiersQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary List all cashiers
+ */
+
+export function useListCashiers<TData = Awaited<ReturnType<typeof listCashiers>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listCashiers>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListCashiersQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getCreateCashierUrl = () => {
+
+
+
+
+  return `/api/admin/cashiers`
+}
+
+/**
+ * @summary Create a new cashier
+ */
+export const createCashier = async (cashierInput: CashierInput, options?: RequestInit): Promise<Cashier> => {
+
+  return customFetch<Cashier>(getCreateCashierUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      cashierInput,)
+  }
+);}
+
+
+
+
+export const getCreateCashierMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createCashier>>, TError,{data: BodyType<CashierInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof createCashier>>, TError,{data: BodyType<CashierInput>}, TContext> => {
+
+const mutationKey = ['createCashier'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createCashier>>, {data: BodyType<CashierInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  createCashier(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateCashierMutationResult = NonNullable<Awaited<ReturnType<typeof createCashier>>>
+    export type CreateCashierMutationBody = BodyType<CashierInput>
+    export type CreateCashierMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Create a new cashier
+ */
+export const useCreateCashier = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createCashier>>, TError,{data: BodyType<CashierInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof createCashier>>,
+        TError,
+        {data: BodyType<CashierInput>},
+        TContext
+      > => {
+      return useMutation(getCreateCashierMutationOptions(options));
+    }
+
+export const getGetActiveCashierUrl = () => {
+
+
+
+
+  return `/api/admin/cashiers/active`
+}
+
+/**
+ * @summary Get the currently active cashier
+ */
+export const getActiveCashier = async ( options?: RequestInit): Promise<Cashier> => {
+
+  return customFetch<Cashier>(getGetActiveCashierUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetActiveCashierQueryKey = () => {
+    return [
+    `/api/admin/cashiers/active`
+    ] as const;
+    }
+
+
+export const getGetActiveCashierQueryOptions = <TData = Awaited<ReturnType<typeof getActiveCashier>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getActiveCashier>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetActiveCashierQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getActiveCashier>>> = ({ signal }) => getActiveCashier({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getActiveCashier>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetActiveCashierQueryResult = NonNullable<Awaited<ReturnType<typeof getActiveCashier>>>
+export type GetActiveCashierQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Get the currently active cashier
+ */
+
+export function useGetActiveCashier<TData = Awaited<ReturnType<typeof getActiveCashier>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getActiveCashier>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetActiveCashierQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getActivateCashierUrl = () => {
+
+
+
+
+  return `/api/admin/cashiers/activate`
+}
+
+/**
+ * @summary Set or clear the active cashier
+ */
+export const activateCashier = async (activateCashierInput: ActivateCashierInput, options?: RequestInit): Promise<Cashier> => {
+
+  return customFetch<Cashier>(getActivateCashierUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      activateCashierInput,)
+  }
+);}
+
+
+
+
+export const getActivateCashierMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof activateCashier>>, TError,{data: BodyType<ActivateCashierInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof activateCashier>>, TError,{data: BodyType<ActivateCashierInput>}, TContext> => {
+
+const mutationKey = ['activateCashier'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof activateCashier>>, {data: BodyType<ActivateCashierInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  activateCashier(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ActivateCashierMutationResult = NonNullable<Awaited<ReturnType<typeof activateCashier>>>
+    export type ActivateCashierMutationBody = BodyType<ActivateCashierInput>
+    export type ActivateCashierMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Set or clear the active cashier
+ */
+export const useActivateCashier = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof activateCashier>>, TError,{data: BodyType<ActivateCashierInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof activateCashier>>,
+        TError,
+        {data: BodyType<ActivateCashierInput>},
+        TContext
+      > => {
+      return useMutation(getActivateCashierMutationOptions(options));
+    }
+
+export const getDeleteCashierUrl = (id: number,) => {
+
+
+
+
+  return `/api/admin/cashiers/${id}`
+}
+
+/**
+ * @summary Delete a cashier
+ */
+export const deleteCashier = async (id: number, options?: RequestInit): Promise<void> => {
+
+  return customFetch<void>(getDeleteCashierUrl(id),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+export const getDeleteCashierMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteCashier>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof deleteCashier>>, TError,{id: number}, TContext> => {
+
+const mutationKey = ['deleteCashier'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteCashier>>, {id: number}> = (props) => {
+          const {id} = props ?? {};
+
+          return  deleteCashier(id,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeleteCashierMutationResult = NonNullable<Awaited<ReturnType<typeof deleteCashier>>>
+
+    export type DeleteCashierMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Delete a cashier
+ */
+export const useDeleteCashier = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteCashier>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof deleteCashier>>,
+        TError,
+        {id: number},
+        TContext
+      > => {
+      return useMutation(getDeleteCashierMutationOptions(options));
+    }
 
 export const getAdminResetDataUrl = () => {
 
