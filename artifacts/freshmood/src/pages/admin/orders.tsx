@@ -13,7 +13,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { formatDistanceToNow, parseISO, format } from "date-fns";
-import { Loader2, Search, Eye, Download } from "lucide-react";
+import { Loader2, Search, Eye, Download, UtensilsCrossed, ShoppingBag, Bike } from "lucide-react";
 import { formatRupiah } from "@/lib/format";
 import {
   Select,
@@ -42,6 +42,22 @@ function PaymentBadge({ method }: { method?: string | null }) {
   return (
     <span className={`inline-block px-2 py-0.5 rounded-full text-xs font-medium whitespace-nowrap ${p.color}`}>
       {p.label}
+    </span>
+  );
+}
+
+const ORDER_TYPE_CONFIG: Record<string, { label: string; color: string; icon: React.ReactNode }> = {
+  dine_in:   { label: "Dine In",   color: "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400",   icon: <UtensilsCrossed className="w-3 h-3" /> },
+  take_away: { label: "Take Away", color: "bg-sky-100 text-sky-700 dark:bg-sky-900/30 dark:text-sky-400",           icon: <ShoppingBag className="w-3 h-3" /> },
+  delivery:  { label: "Delivery",  color: "bg-violet-100 text-violet-700 dark:bg-violet-900/30 dark:text-violet-400", icon: <Bike className="w-3 h-3" /> },
+};
+
+function OrderTypeBadge({ type }: { type?: string | null }) {
+  if (!type) return null;
+  const cfg = ORDER_TYPE_CONFIG[type] ?? { label: type, color: "bg-gray-100 text-gray-600", icon: null };
+  return (
+    <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium whitespace-nowrap ${cfg.color}`}>
+      {cfg.icon}{cfg.label}
     </span>
   );
 }
@@ -130,7 +146,8 @@ export default function AdminOrders() {
                   <tr>
                     <th className="px-6 py-4 font-medium">Order ID</th>
                     <th className="px-6 py-4 font-medium">Date</th>
-                    <th className="px-6 py-4 font-medium">Table & Customer</th>
+                    <th className="px-6 py-4 font-medium">Customer</th>
+                    <th className="px-6 py-4 font-medium">Tipe</th>
                     <th className="px-6 py-4 font-medium">Payment</th>
                     <th className="px-6 py-4 font-medium">Status</th>
                     <th className="px-6 py-4 font-medium">Total</th>
@@ -148,8 +165,13 @@ export default function AdminOrders() {
                         </div>
                       </td>
                       <td className="px-6 py-4">
-                        <div className="font-bold">Table {order.tableNumber}</div>
-                        <div className="text-muted-foreground">{order.customerName}</div>
+                        <div className="font-bold">
+                          {order.tableNumber ? `Table ${order.tableNumber}` : order.customerName}
+                        </div>
+                        {order.tableNumber && <div className="text-muted-foreground">{order.customerName}</div>}
+                      </td>
+                      <td className="px-6 py-4">
+                        <OrderTypeBadge type={order.orderType} />
                       </td>
                       <td className="px-6 py-4">
                         <PaymentBadge method={order.paymentMethod} />
@@ -169,7 +191,7 @@ export default function AdminOrders() {
                   ))}
                   {filteredOrders.length === 0 && (
                     <tr>
-                      <td colSpan={7} className="px-6 py-12 text-center text-muted-foreground">No orders found</td>
+                      <td colSpan={8} className="px-6 py-12 text-center text-muted-foreground">No orders found</td>
                     </tr>
                   )}
                 </tbody>
@@ -185,7 +207,9 @@ export default function AdminOrders() {
               <CardContent className="p-4">
                 <div className="flex items-start justify-between mb-2">
                   <div>
-                    <p className="font-bold text-base">Table {order.tableNumber} · {order.customerName}</p>
+                    <p className="font-bold text-base">
+                      {order.tableNumber ? `Table ${order.tableNumber} · ` : ""}{order.customerName}
+                    </p>
                     <p className="text-xs text-muted-foreground mt-0.5">
                       #{order.id} · {format(parseISO(order.createdAt), "MMM d, HH:mm")}
                     </p>
@@ -193,6 +217,7 @@ export default function AdminOrders() {
                   <Eye className="w-4 h-4 text-muted-foreground shrink-0 mt-1" />
                 </div>
                 <div className="flex items-center gap-2 mt-2 flex-wrap">
+                  <OrderTypeBadge type={order.orderType} />
                   <PaymentBadge method={order.paymentMethod} />
                 </div>
                 <div className="flex items-center justify-between mt-3">
@@ -230,9 +255,21 @@ export default function AdminOrders() {
                     <p className="font-medium">{selectedOrder.customerName}</p>
                   </div>
                   <div>
-                    <p className="text-xs text-muted-foreground mb-1">Table</p>
-                    <p className="font-medium">{selectedOrder.tableNumber}</p>
+                    <p className="text-xs text-muted-foreground mb-1">Tipe Pesanan</p>
+                    <OrderTypeBadge type={selectedOrder.orderType} />
                   </div>
+                  {selectedOrder.tableNumber && (
+                    <div>
+                      <p className="text-xs text-muted-foreground mb-1">Table</p>
+                      <p className="font-medium">{selectedOrder.tableNumber}</p>
+                    </div>
+                  )}
+                  {selectedOrder.deliveryAddress && (
+                    <div className="col-span-2">
+                      <p className="text-xs text-muted-foreground mb-1">Alamat Pengiriman</p>
+                      <p className="font-medium text-sm">{selectedOrder.deliveryAddress}</p>
+                    </div>
+                  )}
                   <div>
                     <p className="text-xs text-muted-foreground mb-1">Status</p>
                     <span className={`inline-block px-2.5 py-1 rounded-full text-xs font-medium capitalize ${getStatusColor(selectedOrder.status)}`}>

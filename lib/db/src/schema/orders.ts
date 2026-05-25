@@ -4,10 +4,12 @@ import { z } from "zod/v4";
 
 export const ordersTable = pgTable("orders", {
   id: serial("id").primaryKey(),
-  tableNumber: integer("table_number").notNull(),
+  tableNumber: integer("table_number"),
   customerName: text("customer_name").notNull(),
   customerPhone: text("customer_phone"),
   notes: text("notes"),
+  orderType: text("order_type").notNull().default("dine_in"),
+  deliveryAddress: text("delivery_address"),
   status: text("status").notNull().default("pending"),
   subtotal: numeric("subtotal", { precision: 12, scale: 2 }).notNull(),
   tax: numeric("tax", { precision: 12, scale: 2 }).notNull(),

@@ -5,13 +5,16 @@
  * FreshMood Restaurant QR Ordering API
  * OpenAPI spec version: 0.1.0
  */
+import type { OrderInputOrderType } from './orderInputOrderType';
 import type { OrderItemInput } from './orderItemInput';
 
 export interface OrderInput {
-  tableNumber: number;
+  tableNumber?: number;
   customerName: string;
   customerPhone?: string;
   notes?: string;
+  orderType?: OrderInputOrderType;
+  deliveryAddress?: string;
   paymentMethod?: string;
   items: OrderItemInput[];
 }

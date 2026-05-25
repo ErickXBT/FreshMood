@@ -5,10 +5,12 @@ import { formatRupiah } from "@/lib/format";
 export type ReceiptOrder = {
   id: number;
   customerName: string;
-  tableNumber: number;
+  tableNumber?: number | null;
   createdAt: string;
   paymentMethod?: string | null;
   cashierName?: string | null;
+  orderType?: string | null;
+  deliveryAddress?: string | null;
   subtotal: number;
   tax: number;
   serviceFee: number;
@@ -85,10 +87,25 @@ export async function downloadReceiptImage(order: ReceiptOrder) {
           <span style="color:#888;">Tanggal</span>
           <span style="font-weight:600;">${format(parseISO(order.createdAt), "dd MMM yyyy, HH:mm")}</span>
         </div>
+        ${order.orderType ? `
+        <div style="display:flex;justify-content:space-between;padding:3px 0;">
+          <span style="color:#888;">Tipe</span>
+          <span style="font-weight:600;">${
+            order.orderType === "dine_in" ? "Dine In" :
+            order.orderType === "take_away" ? "Take Away" :
+            "Delivery"
+          }</span>
+        </div>` : ""}
+        ${order.tableNumber ? `
         <div style="display:flex;justify-content:space-between;padding:3px 0;">
           <span style="color:#888;">Meja</span>
           <span style="font-weight:600;">${order.tableNumber}</span>
-        </div>
+        </div>` : ""}
+        ${order.deliveryAddress ? `
+        <div style="display:flex;justify-content:space-between;padding:3px 0;gap:12px;">
+          <span style="color:#888;white-space:nowrap;">Alamat</span>
+          <span style="font-weight:600;text-align:right;">${order.deliveryAddress}</span>
+        </div>` : ""}
         <div style="display:flex;justify-content:space-between;padding:3px 0;">
           <span style="color:#888;">Nama</span>
           <span style="font-weight:600;">${order.customerName}</span>

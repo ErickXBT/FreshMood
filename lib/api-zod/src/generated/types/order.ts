@@ -6,17 +6,22 @@
  * OpenAPI spec version: 0.1.0
  */
 import type { OrderItem } from './orderItem';
+import type { OrderOrderType } from './orderOrderType';
 import type { OrderPaymentStatus } from './orderPaymentStatus';
 import type { OrderStatus } from './orderStatus';
 
 export interface Order {
   id: number;
-  tableNumber: number;
+  /** @nullable */
+  tableNumber?: number | null;
   customerName: string;
   /** @nullable */
   customerPhone?: string | null;
   /** @nullable */
   notes?: string | null;
+  orderType?: OrderOrderType;
+  /** @nullable */
+  deliveryAddress?: string | null;
   status: OrderStatus;
   subtotal: number;
   tax: number;

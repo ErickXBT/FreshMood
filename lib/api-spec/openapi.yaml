@@ -911,17 +911,22 @@ components:
 
     Order:
       type: object
-      required: [id, tableNumber, customerName, status, subtotal, tax, serviceFee, total, createdAt]
+      required: [id, customerName, status, subtotal, tax, serviceFee, total, createdAt]
       properties:
         id:
           type: integer
         tableNumber:
-          type: integer
+          type: ["integer", "null"]
         customerName:
           type: string
         customerPhone:
           type: ["string", "null"]
         notes:
+          type: ["string", "null"]
+        orderType:
+          type: string
+          enum: [dine_in, take_away, delivery]
+        deliveryAddress:
           type: ["string", "null"]
         status:
           type: string
@@ -954,7 +959,7 @@ components:
 
     OrderInput:
       type: object
-      required: [tableNumber, customerName, items]
+      required: [customerName, items]
       properties:
         tableNumber:
           type: integer
@@ -963,6 +968,11 @@ components:
         customerPhone:
           type: string
         notes:
+          type: string
+        orderType:
+          type: string
+          enum: [dine_in, take_away, delivery]
+        deliveryAddress:
           type: string
         paymentMethod:
           type: string

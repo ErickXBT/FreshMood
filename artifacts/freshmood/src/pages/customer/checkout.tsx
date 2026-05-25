@@ -12,26 +12,36 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Separator } from "@/components/ui/separator";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { ChevronLeft, Loader2, Receipt } from "lucide-react";
+import { ChevronLeft, Loader2, Receipt, UtensilsCrossed, ShoppingBag, Bike } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
+type OrderType = "dine_in" | "take_away" | "delivery";
+
+const ORDER_TYPES: { id: OrderType; label: string; icon: React.ReactNode; desc: string }[] = [
+  { id: "dine_in",   label: "Dine In",   icon: <UtensilsCrossed className="w-4 h-4" />, desc: "Makan di tempat" },
+  { id: "take_away", label: "Take Away", icon: <ShoppingBag className="w-4 h-4" />,     desc: "Bawa pulang" },
+  { id: "delivery",  label: "Delivery",  icon: <Bike className="w-4 h-4" />,            desc: "Antar ke alamat" },
+];
+
 const PAYMENT_METHODS = [
-  { id: "QRIS", name: "QRIS / e-Wallet" },
-  { id: "CASH", name: "Cash at Cashier" },
+  { id: "QRIS",          name: "QRIS / e-Wallet" },
+  { id: "CASH",          name: "Cash at Cashier" },
   { id: "DELIVERY_CASH", name: "Delivery Cash", description: "Bayar tunai saat pesanan tiba di rumah" },
-  { id: "CARD", name: "Credit/Debit Card" }
+  { id: "CARD",          name: "Credit/Debit Card" }
 ];
 
 export default function Checkout() {
   const [, setLocation] = useLocation();
-  const { items, subtotal, totalItems, clearCart } = useCart();
+  const { items, subtotal, clearCart } = useCart();
   const { toast } = useToast();
-  
+
+  const [orderType, setOrderType] = useState<OrderType>("dine_in");
+  const [tableNumber, setTableNumber] = useState<string>("");
   const [customerName, setCustomerName] = useState("");
   const [customerPhone, setCustomerPhone] = useState("");
+  const [deliveryAddress, setDeliveryAddress] = useState("");
   const [notes, setNotes] = useState("");
   const [paymentMethod, setPaymentMethod] = useState("QRIS");
-  const [tableNumber, setTableNumber] = useState<string>("");
 
   const createOrderMutation = useCreateOrder();
   const createPaymentMutation = useCreatePayment();
@@ -39,7 +49,7 @@ export default function Checkout() {
   useEffect(() => {
     const storedTable = sessionStorage.getItem("freshmood-table");
     if (storedTable) setTableNumber(storedTable);
-    
+
     if (items.length === 0) {
       setLocation("/menu");
     }
@@ -51,24 +61,25 @@ export default function Checkout() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!customerName.trim()) {
-      toast({ title: "Name required", description: "Please enter your name for the order", variant: "destructive" });
+      toast({ title: "Nama diperlukan", description: "Masukkan nama Anda untuk pesanan", variant: "destructive" });
       return;
     }
 
-    if (!tableNumber) {
-      toast({ title: "Table required", description: "Please scan a valid table QR code first", variant: "destructive" });
+    if (orderType === "delivery" && !deliveryAddress.trim()) {
+      toast({ title: "Alamat diperlukan", description: "Masukkan alamat pengiriman untuk pesanan Delivery", variant: "destructive" });
       return;
     }
 
     try {
-      // 1. Create Order
       const order = await createOrderMutation.mutateAsync({
         data: {
-          tableNumber: parseInt(tableNumber),
+          tableNumber: tableNumber ? parseInt(tableNumber) : undefined,
           customerName,
           notes: notes || undefined,
+          orderType,
+          deliveryAddress: orderType === "delivery" ? deliveryAddress : undefined,
           paymentMethod,
           customerPhone: customerPhone || undefined,
           items: items.map(i => ({
@@ -79,7 +90,6 @@ export default function Checkout() {
         }
       });
 
-      // 2. Create Payment intent
       await createPaymentMutation.mutateAsync({
         data: {
           orderId: order.id,
@@ -90,11 +100,10 @@ export default function Checkout() {
 
       clearCart();
       setLocation(`/order-status/${order.id}`);
-      
-    } catch (error) {
+    } catch {
       toast({
-        title: "Checkout failed",
-        description: "There was an error processing your order. Please try again.",
+        title: "Checkout gagal",
+        description: "Terjadi kesalahan saat memproses pesanan. Coba lagi.",
         variant: "destructive"
       });
     }
@@ -111,12 +120,12 @@ export default function Checkout() {
 
       <main className="max-w-xl mx-auto p-4 space-y-6">
         <form id="checkout-form" onSubmit={handleSubmit} className="space-y-6">
-          {/* Order Details */}
+
+          {/* Order Summary */}
           <div className="bg-card p-6 rounded-2xl border border-border shadow-sm space-y-4">
             <h2 className="font-bold text-lg flex items-center gap-2">
               <Receipt className="w-5 h-5 text-primary" /> Order Summary
             </h2>
-            
             <div className="space-y-3">
               {items.map((item) => (
                 <div key={item.menuItem.id} className="flex justify-between items-start text-sm">
@@ -131,9 +140,7 @@ export default function Checkout() {
                 </div>
               ))}
             </div>
-
             <Separator className="my-4" />
-
             <div className="space-y-2 text-sm">
               <div className="flex justify-between text-muted-foreground">
                 <span>Subtotal</span>
@@ -153,20 +160,71 @@ export default function Checkout() {
             </div>
           </div>
 
-          {/* Customer Info */}
-          <div className="bg-card p-6 rounded-2xl border border-border shadow-sm space-y-4">
+          {/* Your Details */}
+          <div className="bg-card p-6 rounded-2xl border border-border shadow-sm space-y-5">
             <h2 className="font-bold text-lg">Your Details</h2>
-            
-            <div className="flex items-center justify-between p-3 bg-secondary rounded-lg mb-4">
-              <span className="text-sm font-medium">Table Number</span>
-              <span className="text-lg font-bold text-primary">{tableNumber || "Unknown"}</span>
+
+            {/* Order Type Selector */}
+            <div className="space-y-2">
+              <Label>Tipe Pesanan</Label>
+              <div className="grid grid-cols-3 gap-2">
+                {ORDER_TYPES.map(type => (
+                  <button
+                    key={type.id}
+                    type="button"
+                    onClick={() => setOrderType(type.id)}
+                    className={`flex flex-col items-center gap-1.5 p-3 rounded-xl border text-center transition-all ${
+                      orderType === type.id
+                        ? "border-primary bg-primary/10 text-primary"
+                        : "border-border hover:bg-muted/50 text-muted-foreground"
+                    }`}
+                  >
+                    {type.icon}
+                    <span className="font-semibold text-xs">{type.label}</span>
+                    <span className="text-[10px] leading-tight opacity-70">{type.desc}</span>
+                  </button>
+                ))}
+              </div>
             </div>
 
+            {/* Table Number — only for Dine In, optional */}
+            {orderType === "dine_in" && (
+              <div className="space-y-2">
+                <Label htmlFor="table">Nomor Meja <span className="text-muted-foreground text-xs font-normal">(Opsional)</span></Label>
+                <Input
+                  id="table"
+                  type="number"
+                  min="1"
+                  placeholder="Contoh: 5"
+                  value={tableNumber}
+                  onChange={(e) => setTableNumber(e.target.value)}
+                  className="bg-muted/50"
+                />
+              </div>
+            )}
+
+            {/* Delivery Address — only for Delivery */}
+            {orderType === "delivery" && (
+              <div className="space-y-2">
+                <Label htmlFor="address">Alamat Pengiriman <span className="text-destructive">*</span></Label>
+                <Textarea
+                  id="address"
+                  placeholder="Masukkan alamat lengkap tujuan pengiriman..."
+                  value={deliveryAddress}
+                  onChange={(e) => setDeliveryAddress(e.target.value)}
+                  className="bg-muted/50 resize-none"
+                  rows={3}
+                  required
+                />
+              </div>
+            )}
+
+            {/* Full Name */}
             <div className="space-y-2">
-              <Label htmlFor="name">Full Name <span className="text-destructive">*</span></Label>
-              <Input 
-                id="name" 
-                placeholder="John Doe" 
+              <Label htmlFor="name">Nama Lengkap <span className="text-destructive">*</span></Label>
+              <Input
+                id="name"
+                placeholder="John Doe"
                 value={customerName}
                 onChange={(e) => setCustomerName(e.target.value)}
                 required
@@ -174,9 +232,10 @@ export default function Checkout() {
               />
             </div>
 
+            {/* Phone */}
             <div className="space-y-2">
               <Label htmlFor="phone">No HP / WhatsApp</Label>
-              <Input 
+              <Input
                 id="phone"
                 type="tel"
                 placeholder="08xxxxxxxxxx"
@@ -186,11 +245,12 @@ export default function Checkout() {
               />
             </div>
 
+            {/* Notes */}
             <div className="space-y-2">
-              <Label htmlFor="notes">Order Notes (Optional)</Label>
-              <Textarea 
-                id="notes" 
-                placeholder="Any special requests? (e.g., less ice, no sugar)" 
+              <Label htmlFor="notes">Catatan Pesanan (Opsional)</Label>
+              <Textarea
+                id="notes"
+                placeholder="Ada permintaan khusus? (contoh: es sedikit, tanpa gula)"
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
                 className="bg-muted/50 resize-none"
@@ -201,7 +261,7 @@ export default function Checkout() {
 
           {/* Payment Method */}
           <div className="bg-card p-6 rounded-2xl border border-border shadow-sm space-y-4">
-            <h2 className="font-bold text-lg">Payment Method</h2>
+            <h2 className="font-bold text-lg">Metode Pembayaran</h2>
             <RadioGroup value={paymentMethod} onValueChange={setPaymentMethod} className="space-y-3">
               {PAYMENT_METHODS.map((method) => (
                 <div key={method.id} className="flex items-center justify-between border rounded-lg p-4 cursor-pointer hover:bg-muted/50 transition-colors [&:has([data-state=checked])]:border-primary [&:has([data-state=checked])]:bg-primary/5">
@@ -218,6 +278,7 @@ export default function Checkout() {
               ))}
             </RadioGroup>
           </div>
+
         </form>
       </main>
 
@@ -227,17 +288,15 @@ export default function Checkout() {
             <p className="text-sm text-muted-foreground font-medium">Total Payment</p>
             <p className="text-xl font-bold">{formatRupiah(total)}</p>
           </div>
-          <Button 
-            type="submit" 
+          <Button
+            type="submit"
             form="checkout-form"
             className="w-1/2 h-14 rounded-2xl text-lg shadow-lg"
             disabled={createOrderMutation.isPending || createPaymentMutation.isPending}
           >
             {(createOrderMutation.isPending || createPaymentMutation.isPending) ? (
               <Loader2 className="w-5 h-5 animate-spin" />
-            ) : (
-              "Pay Now"
-            )}
+            ) : "Pay Now"}
           </Button>
         </div>
       </div>

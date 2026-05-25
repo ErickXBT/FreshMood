@@ -70,7 +70,7 @@ router.post("/orders", async (req, res): Promise<void> => {
     return;
   }
 
-  const { tableNumber, customerName, customerPhone, notes, paymentMethod, items } = parsed.data;
+  const { tableNumber, customerName, customerPhone, notes, orderType, deliveryAddress, paymentMethod, items } = parsed.data;
 
   // Read active cashier
   const [activeCashier] = await db
@@ -123,10 +123,12 @@ router.post("/orders", async (req, res): Promise<void> => {
   const [order] = await db
     .insert(ordersTable)
     .values({
-      tableNumber,
+      tableNumber: tableNumber ?? null,
       customerName,
       customerPhone: customerPhone ?? null,
       notes: notes ?? null,
+      orderType: orderType ?? "dine_in",
+      deliveryAddress: deliveryAddress ?? null,
       status: "pending",
       cashierName,
       subtotal: String(subtotal),

@@ -206,10 +206,12 @@ export const ListOrdersQueryParams = zod.object({
 
 export const ListOrdersResponseItem = zod.object({
   "id": zod.number(),
-  "tableNumber": zod.number(),
+  "tableNumber": zod.number().nullish(),
   "customerName": zod.string(),
   "customerPhone": zod.string().nullish(),
   "notes": zod.string().nullish(),
+  "orderType": zod.enum(['dine_in', 'take_away', 'delivery']).optional(),
+  "deliveryAddress": zod.string().nullish(),
   "status": zod.enum(['pending', 'confirmed', 'preparing', 'ready', 'completed', 'cancelled']),
   "subtotal": zod.number(),
   "tax": zod.number(),
@@ -240,10 +242,12 @@ export const ListOrdersResponse = zod.array(ListOrdersResponseItem)
  * @summary Place a new order
  */
 export const CreateOrderBody = zod.object({
-  "tableNumber": zod.number(),
+  "tableNumber": zod.number().optional(),
   "customerName": zod.string(),
   "customerPhone": zod.string().optional(),
   "notes": zod.string().optional(),
+  "orderType": zod.enum(['dine_in', 'take_away', 'delivery']).optional(),
+  "deliveryAddress": zod.string().optional(),
   "paymentMethod": zod.string().optional(),
   "items": zod.array(zod.object({
   "menuItemId": zod.number(),
@@ -262,10 +266,12 @@ export const GetOrderParams = zod.object({
 
 export const GetOrderResponse = zod.object({
   "id": zod.number(),
-  "tableNumber": zod.number(),
+  "tableNumber": zod.number().nullish(),
   "customerName": zod.string(),
   "customerPhone": zod.string().nullish(),
   "notes": zod.string().nullish(),
+  "orderType": zod.enum(['dine_in', 'take_away', 'delivery']).optional(),
+  "deliveryAddress": zod.string().nullish(),
   "status": zod.enum(['pending', 'confirmed', 'preparing', 'ready', 'completed', 'cancelled']),
   "subtotal": zod.number(),
   "tax": zod.number(),
@@ -305,10 +311,12 @@ export const UpdateOrderStatusBody = zod.object({
 
 export const UpdateOrderStatusResponse = zod.object({
   "id": zod.number(),
-  "tableNumber": zod.number(),
+  "tableNumber": zod.number().nullish(),
   "customerName": zod.string(),
   "customerPhone": zod.string().nullish(),
   "notes": zod.string().nullish(),
+  "orderType": zod.enum(['dine_in', 'take_away', 'delivery']).optional(),
+  "deliveryAddress": zod.string().nullish(),
   "status": zod.enum(['pending', 'confirmed', 'preparing', 'ready', 'completed', 'cancelled']),
   "subtotal": zod.number(),
   "tax": zod.number(),
@@ -409,10 +417,12 @@ export const GetRecentOrdersQueryParams = zod.object({
 
 export const GetRecentOrdersResponseItem = zod.object({
   "id": zod.number(),
-  "tableNumber": zod.number(),
+  "tableNumber": zod.number().nullish(),
   "customerName": zod.string(),
   "customerPhone": zod.string().nullish(),
   "notes": zod.string().nullish(),
+  "orderType": zod.enum(['dine_in', 'take_away', 'delivery']).optional(),
+  "deliveryAddress": zod.string().nullish(),
   "status": zod.enum(['pending', 'confirmed', 'preparing', 'ready', 'completed', 'cancelled']),
   "subtotal": zod.number(),
   "tax": zod.number(),

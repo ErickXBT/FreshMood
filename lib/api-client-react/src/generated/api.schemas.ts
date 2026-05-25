@@ -93,6 +93,15 @@ export interface OrderItemInput {
   notes?: string;
 }
 
+export type OrderOrderType = typeof OrderOrderType[keyof typeof OrderOrderType];
+
+
+export const OrderOrderType = {
+  dine_in: 'dine_in',
+  take_away: 'take_away',
+  delivery: 'delivery',
+} as const;
+
 export type OrderStatus = typeof OrderStatus[keyof typeof OrderStatus];
 
 
@@ -115,12 +124,16 @@ export const OrderPaymentStatus = {
 
 export interface Order {
   id: number;
-  tableNumber: number;
+  /** @nullable */
+  tableNumber?: number | null;
   customerName: string;
   /** @nullable */
   customerPhone?: string | null;
   /** @nullable */
   notes?: string | null;
+  orderType?: OrderOrderType;
+  /** @nullable */
+  deliveryAddress?: string | null;
   status: OrderStatus;
   subtotal: number;
   tax: number;
@@ -138,11 +151,22 @@ export interface Order {
   items?: OrderItem[];
 }
 
+export type OrderInputOrderType = typeof OrderInputOrderType[keyof typeof OrderInputOrderType];
+
+
+export const OrderInputOrderType = {
+  dine_in: 'dine_in',
+  take_away: 'take_away',
+  delivery: 'delivery',
+} as const;
+
 export interface OrderInput {
-  tableNumber: number;
+  tableNumber?: number;
   customerName: string;
   customerPhone?: string;
   notes?: string;
+  orderType?: OrderInputOrderType;
+  deliveryAddress?: string;
   paymentMethod?: string;
   items: OrderItemInput[];
 }
