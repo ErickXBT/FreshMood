@@ -8,7 +8,7 @@ const router: IRouter = Router();
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
-const uploadDir = path.resolve(__dirname, "../../../../artifacts/freshmood/public/images/menu");
+const uploadDir = path.resolve(__dirname, "../../../artifacts/freshmood/public/images/menu");
 
 if (!fs.existsSync(uploadDir)) {
   fs.mkdirSync(uploadDir, { recursive: true });
