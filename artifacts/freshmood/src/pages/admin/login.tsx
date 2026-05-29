@@ -36,7 +36,7 @@ export default function AdminLogin() {
   const [newPassword, setNewPassword] = useState("");
   const [showNewPassword, setShowNewPassword] = useState(false);
 
-  const { login, isAuthenticated } = useAuth();
+  const { login, isAuthenticated, getDefaultRoute } = useAuth();
   const [, setLocation] = useLocation();
   const { toast } = useToast();
 
@@ -46,23 +46,29 @@ export default function AdminLogin() {
   const resetMutation = useAdminResetPassword();
 
   useEffect(() => {
-    if (isAuthenticated) setLocation("/admin/dashboard");
-  }, [isAuthenticated, setLocation]);
+    if (isAuthenticated) setLocation(getDefaultRoute());
+  }, [isAuthenticated, setLocation, getDefaultRoute]);
 
   // ── Login ──
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!username || !password) {
-      toast({ title: "Error", description: "Username dan password wajib diisi", variant: "destructive" });
+      toast({ title: "Error", description: "Username/email dan password wajib diisi", variant: "destructive" });
       return;
     }
     try {
       const result = await loginMutation.mutateAsync({ data: { username, password } });
-      login(result.token, result.username);
+      login({
+        token: result.token,
+        username: result.username,
+        role: result.role,
+        permissions: result.permissions,
+        name: result.name,
+      });
       toast({ title: "Berhasil", description: "Selamat datang kembali!" });
-      setLocation("/admin/dashboard");
+      setLocation(getDefaultRoute());
     } catch {
-      toast({ title: "Login Gagal", description: "Username atau password salah", variant: "destructive" });
+      toast({ title: "Login Gagal", description: "Username/email atau password salah", variant: "destructive" });
     }
   };
 
@@ -85,9 +91,15 @@ export default function AdminLogin() {
       const result = await registerMutation.mutateAsync({
         data: { username: regUsername, email: regEmail, password: regPassword },
       });
-      login(result.token, result.username);
+      login({
+        token: result.token,
+        username: result.username,
+        role: result.role,
+        permissions: result.permissions,
+        name: result.name,
+      });
       toast({ title: "Akun dibuat!", description: "Selamat datang di FreshMood Admin" });
-      setLocation("/admin/dashboard");
+      setLocation(getDefaultRoute());
     } catch (err: unknown) {
       const msg = (err as { response?: { data?: { error?: string } } })?.response?.data?.error ?? "Gagal membuat akun";
       toast({ title: "Error", description: msg, variant: "destructive" });
@@ -152,15 +164,15 @@ export default function AdminLogin() {
           <>
             <CardHeader>
               <CardTitle>Masuk</CardTitle>
-              <CardDescription>Masukkan username dan password akun admin kamu</CardDescription>
+              <CardDescription>Masukkan username/email dan password akun kamu</CardDescription>
             </CardHeader>
             <CardContent>
               <form onSubmit={handleLogin} className="space-y-4">
                 <div className="space-y-2">
-                  <label className="text-sm font-medium">Username</label>
+                  <label className="text-sm font-medium">Username atau Email</label>
                   <Input
                     type="text"
-                    placeholder="username"
+                    placeholder="username atau email"
                     value={username}
                     onChange={(e) => setUsername(e.target.value)}
                     autoFocus

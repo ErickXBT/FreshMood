@@ -74,7 +74,12 @@ export default function AdminMenu() {
     try {
       const formData = new FormData();
       formData.append("image", file);
-      const res = await fetch("/api/upload/menu-image", { method: "POST", body: formData });
+      const token = localStorage.getItem("freshmood-token");
+      const res = await fetch("/api/upload/menu-image", {
+        method: "POST",
+        body: formData,
+        headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+      });
       if (!res.ok) throw new Error("Upload failed");
       const { url } = await res.json();
       setItemImage(url);

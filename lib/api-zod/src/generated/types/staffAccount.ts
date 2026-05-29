@@ -6,11 +6,12 @@
  * OpenAPI spec version: 0.1.0
  */
 
-export interface AdminLoginResult {
-  token: string;
-  username: string;
+export interface StaffAccount {
+  id: number;
+  /** @nullable */
+  name: string | null;
+  email: string;
   role: string;
   permissions: string[];
-  /** @nullable */
-  name?: string | null;
+  createdAt: string;
 }

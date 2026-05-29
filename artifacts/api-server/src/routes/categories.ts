@@ -9,6 +9,7 @@ import {
   ListCategoriesResponse,
   UpdateCategoryResponse,
 } from "@workspace/api-zod";
+import { requirePermission } from "../lib/auth";
 
 const router: IRouter = Router();
 
@@ -20,7 +21,7 @@ router.get("/categories", async (req, res): Promise<void> => {
   res.json(ListCategoriesResponse.parse(categories));
 });
 
-router.post("/categories", async (req, res): Promise<void> => {
+router.post("/categories", requirePermission("menu"), async (req, res): Promise<void> => {
   const parsed = CreateCategoryBody.safeParse(req.body);
   if (!parsed.success) {
     res.status(400).json({ error: parsed.error.message });
@@ -36,7 +37,7 @@ router.post("/categories", async (req, res): Promise<void> => {
   res.status(201).json(category);
 });
 
-router.patch("/categories/:id", async (req, res): Promise<void> => {
+router.patch("/categories/:id", requirePermission("menu"), async (req, res): Promise<void> => {
   const rawId = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
   const paramsResult = UpdateCategoryParams.safeParse({ id: parseInt(rawId, 10) });
   if (!paramsResult.success) {
@@ -60,7 +61,7 @@ router.patch("/categories/:id", async (req, res): Promise<void> => {
   res.json(UpdateCategoryResponse.parse(updated));
 });
 
-router.delete("/categories/:id", async (req, res): Promise<void> => {
+router.delete("/categories/:id", requirePermission("menu"), async (req, res): Promise<void> => {
   const rawId = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
   const paramsResult = DeleteCategoryParams.safeParse({ id: parseInt(rawId, 10) });
   if (!paramsResult.success) {

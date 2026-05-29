@@ -11,6 +11,7 @@ import {
   GetOrderResponse,
   UpdateOrderStatusResponse,
 } from "@workspace/api-zod";
+import { hasPermission, requireAuth } from "../lib/auth";
 
 const router: IRouter = Router();
 
@@ -34,7 +35,7 @@ async function getOrderWithItems(orderId: number) {
   };
 }
 
-router.get("/orders", async (req, res): Promise<void> => {
+router.get("/orders", requireAuth, async (req, res): Promise<void> => {
   const queryResult = ListOrdersQueryParams.safeParse(req.query);
   if (!queryResult.success) {
     res.status(400).json({ error: queryResult.error.message });
@@ -64,6 +65,12 @@ router.get("/orders", async (req, res): Promise<void> => {
 });
 
 router.post("/orders", async (req, res): Promise<void> => {
+  // Authenticated staff need the "kasir" permission. Unauthenticated customer
+  // orders (no token) pass through untouched.
+  if (req.auth && !hasPermission(req.auth, "kasir")) {
+    res.status(403).json({ error: "Kamu tidak memiliki akses ke kasir." });
+    return;
+  }
   const parsed = CreateOrderBody.safeParse(req.body);
   if (!parsed.success) {
     res.status(400).json({ error: parsed.error.message });
@@ -177,7 +184,7 @@ router.get("/orders/:id", async (req, res): Promise<void> => {
   res.json(GetOrderResponse.parse(order));
 });
 
-router.patch("/orders/:id", async (req, res): Promise<void> => {
+router.patch("/orders/:id", requireAuth, async (req, res): Promise<void> => {
   const rawId = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
   const paramsResult = UpdateOrderStatusParams.safeParse({ id: parseInt(rawId, 10) });
   if (!paramsResult.success) {
@@ -187,6 +194,15 @@ router.patch("/orders/:id", async (req, res): Promise<void> => {
   const bodyResult = UpdateOrderStatusBody.safeParse(req.body);
   if (!bodyResult.success) {
     res.status(400).json({ error: bodyResult.error.message });
+    return;
+  }
+  // Cancelling a transaction requires the "cancel_transactions" permission for
+  // authenticated staff. Other status changes (e.g. kitchen flow) pass through.
+  if (
+    bodyResult.data.status === "cancelled" &&
+    !hasPermission(req.auth!, "cancel_transactions")
+  ) {
+    res.status(403).json({ error: "Kamu tidak memiliki akses untuk membatalkan transaksi." });
     return;
   }
   const updateData: Record<string, unknown> = { status: bodyResult.data.status };

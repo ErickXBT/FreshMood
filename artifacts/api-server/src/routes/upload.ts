@@ -3,6 +3,7 @@ import multer from "multer";
 import path from "path";
 import fs from "fs";
 import { fileURLToPath } from "url";
+import { requirePermission } from "../lib/auth";
 
 const router: IRouter = Router();
 
@@ -32,7 +33,7 @@ const upload = multer({
   },
 });
 
-router.post("/upload/menu-image", upload.single("image"), (req, res): void => {
+router.post("/upload/menu-image", requirePermission("menu"), upload.single("image"), (req, res): void => {
   if (!req.file) {
     res.status(400).json({ error: "No image file provided or invalid file type" });
     return;

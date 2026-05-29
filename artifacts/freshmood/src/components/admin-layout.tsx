@@ -22,6 +22,7 @@ import {
   UserX,
   BellRing,
   BellOff,
+  ShieldCheck,
 } from "lucide-react";
 import { useTheme } from "@/hooks/use-theme";
 import { Button } from "@/components/ui/button";
@@ -34,7 +35,7 @@ const NOTIFIED_HREFS = new Set(["/admin/kitchen", "/admin/orders"]);
 
 export default function AdminLayout({ children }: AdminLayoutProps) {
   const [location, setLocation] = useLocation();
-  const { logout, username } = useAuth();
+  const { logout, username, name, isOwner, hasPermission } = useAuth();
   const { theme, setTheme } = useTheme();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [cashierDialogOpen, setCashierDialogOpen] = useState(false);
@@ -51,16 +52,21 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
     setSidebarOpen(false);
   };
 
-  const navItems = [
-    { href: "/admin/dashboard", label: "Dashboard", icon: LayoutDashboard },
-    { href: "/admin/kitchen",   label: "Kitchen",   icon: ChefHat },
-    { href: "/admin/menu",      label: "Menu",       icon: MenuSquare },
-    { href: "/admin/orders",    label: "Orders",     icon: ListOrdered },
-    { href: "/admin/leaderboard", label: "Leaderboard", icon: Trophy },
-    { href: "/admin/payments",  label: "Payments",   icon: CreditCard },
-    { href: "/admin/employees", label: "Karyawan",   icon: Users },
-    { href: "/admin/settings",  label: "Settings",   icon: Settings },
+  const allNavItems = [
+    { href: "/admin/dashboard", label: "Dashboard", icon: LayoutDashboard, perm: "dashboard" },
+    { href: "/admin/kitchen",   label: "Kitchen",   icon: ChefHat, perm: "kitchen" },
+    { href: "/admin/menu",      label: "Menu",       icon: MenuSquare, perm: "menu" },
+    { href: "/admin/orders",    label: "Orders",     icon: ListOrdered, perm: "orders" },
+    { href: "/admin/leaderboard", label: "Leaderboard", icon: Trophy, perm: "leaderboard" },
+    { href: "/admin/payments",  label: "Payments",   icon: CreditCard, perm: "payments" },
+    { href: "/admin/employees", label: "Karyawan",   icon: Users, perm: "employees" },
+    { href: "/admin/settings",  label: "Settings",   icon: Settings, perm: "settings" },
+    { href: "/admin/staff",     label: "Akun Staf",  icon: ShieldCheck, perm: "__owner__" },
   ];
+
+  const navItems = allNavItems.filter((item) =>
+    item.perm === "__owner__" ? isOwner : hasPermission(item.perm)
+  );
 
   const showBadge = (href: string) =>
     NOTIFIED_HREFS.has(href) && newOrderCount > 0;
@@ -167,7 +173,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
           </button>
 
           <div className="flex items-center justify-between px-2">
-            <span className="text-sm font-medium">Hi, {username}</span>
+            <span className="text-sm font-medium">Hi, {name || username}</span>
             <Button variant="ghost" size="icon" onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}>
               {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
             </Button>

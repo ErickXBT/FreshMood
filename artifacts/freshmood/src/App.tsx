@@ -1,9 +1,11 @@
-import { Switch, Route, Router as WouterRouter } from "wouter";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { Switch, Route, Router as WouterRouter, useLocation } from "wouter";
+import { useEffect, ReactNode } from "react";
+import { QueryClient, QueryClientProvider, MutationCache, QueryCache } from "@tanstack/react-query";
+import { ApiError } from "@workspace/api-client-react";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { ThemeProvider } from "@/hooks/use-theme";
-import { AuthProvider } from "@/hooks/use-auth";
+import { AuthProvider, useAuth } from "@/hooks/use-auth";
 import { CartProvider } from "@/hooks/use-cart";
 import NotFound from "@/pages/not-found";
 
@@ -17,12 +19,24 @@ import AdminLeaderboard from "@/pages/admin/leaderboard";
 import AdminPayments from "@/pages/admin/payments";
 import AdminSettings from "@/pages/admin/settings";
 import AdminEmployees from "@/pages/admin/employees";
+import AdminStaff from "@/pages/admin/staff";
 
 import CustomerMenu from "@/pages/customer/menu";
 import Checkout from "@/pages/customer/checkout";
 import OrderStatusPage from "@/pages/customer/order-status";
 
-const queryClient = new QueryClient();
+let handleAuthExpired: (() => void) | null = null;
+
+function onApiError(error: unknown) {
+  if (error instanceof ApiError && error.status === 401) {
+    handleAuthExpired?.();
+  }
+}
+
+const queryClient = new QueryClient({
+  queryCache: new QueryCache({ onError: onApiError }),
+  mutationCache: new MutationCache({ onError: onApiError }),
+});
 
 function Home() {
   return (
@@ -42,11 +56,55 @@ function Home() {
   );
 }
 
+interface ProtectedRouteProps {
+  permission?: string;
+  ownerOnly?: boolean;
+  children: ReactNode;
+}
+
+function ProtectedRoute({ permission, ownerOnly, children }: ProtectedRouteProps) {
+  const { isAuthenticated, isOwner, hasPermission, getDefaultRoute } = useAuth();
+  const [, setLocation] = useLocation();
+
+  const allowed =
+    isAuthenticated &&
+    (ownerOnly ? isOwner : permission ? hasPermission(permission) : true);
+
+  useEffect(() => {
+    if (!isAuthenticated) {
+      setLocation("/admin/login");
+    } else if (!allowed) {
+      setLocation(getDefaultRoute());
+    }
+  }, [isAuthenticated, allowed, setLocation, getDefaultRoute]);
+
+  if (!allowed) return null;
+  return <>{children}</>;
+}
+
+function AuthExpiredBridge() {
+  const { logout, isAuthenticated } = useAuth();
+  const [, setLocation] = useLocation();
+
+  useEffect(() => {
+    handleAuthExpired = () => {
+      if (!isAuthenticated) return;
+      logout();
+      setLocation("/admin/login");
+    };
+    return () => {
+      handleAuthExpired = null;
+    };
+  }, [logout, setLocation, isAuthenticated]);
+
+  return null;
+}
+
 function Router() {
   return (
     <Switch>
       <Route path="/" component={Home} />
-      
+
       {/* Customer Routes */}
       <Route path="/menu" component={CustomerMenu} />
       <Route path="/checkout" component={Checkout} />
@@ -54,14 +112,33 @@ function Router() {
 
       {/* Admin Routes */}
       <Route path="/admin/login" component={AdminLogin} />
-      <Route path="/admin/dashboard" component={AdminDashboard} />
-      <Route path="/admin/kitchen" component={AdminKitchen} />
-      <Route path="/admin/menu" component={AdminMenu} />
-      <Route path="/admin/orders" component={AdminOrders} />
-      <Route path="/admin/leaderboard" component={AdminLeaderboard} />
-      <Route path="/admin/payments" component={AdminPayments} />
-      <Route path="/admin/settings" component={AdminSettings} />
-      <Route path="/admin/employees" component={AdminEmployees} />
+      <Route path="/admin/dashboard">
+        <ProtectedRoute permission="dashboard"><AdminDashboard /></ProtectedRoute>
+      </Route>
+      <Route path="/admin/kitchen">
+        <ProtectedRoute permission="kitchen"><AdminKitchen /></ProtectedRoute>
+      </Route>
+      <Route path="/admin/menu">
+        <ProtectedRoute permission="menu"><AdminMenu /></ProtectedRoute>
+      </Route>
+      <Route path="/admin/orders">
+        <ProtectedRoute permission="orders"><AdminOrders /></ProtectedRoute>
+      </Route>
+      <Route path="/admin/leaderboard">
+        <ProtectedRoute permission="leaderboard"><AdminLeaderboard /></ProtectedRoute>
+      </Route>
+      <Route path="/admin/payments">
+        <ProtectedRoute permission="payments"><AdminPayments /></ProtectedRoute>
+      </Route>
+      <Route path="/admin/employees">
+        <ProtectedRoute permission="employees"><AdminEmployees /></ProtectedRoute>
+      </Route>
+      <Route path="/admin/settings">
+        <ProtectedRoute permission="settings"><AdminSettings /></ProtectedRoute>
+      </Route>
+      <Route path="/admin/staff">
+        <ProtectedRoute ownerOnly><AdminStaff /></ProtectedRoute>
+      </Route>
 
       <Route component={NotFound} />
     </Switch>
@@ -76,6 +153,7 @@ function App() {
           <CartProvider>
             <TooltipProvider>
               <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
+                <AuthExpiredBridge />
                 <Router />
               </WouterRouter>
               <Toaster />

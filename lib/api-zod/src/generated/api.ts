@@ -619,7 +619,10 @@ export const AdminRegisterBody = zod.object({
 
 export const AdminRegisterResponse = zod.object({
   "token": zod.string(),
-  "username": zod.string()
+  "username": zod.string(),
+  "role": zod.string(),
+  "permissions": zod.array(zod.string()),
+  "name": zod.string().nullish()
 })
 
 
@@ -659,7 +662,75 @@ export const AdminLoginBody = zod.object({
 
 export const AdminLoginResponse = zod.object({
   "token": zod.string(),
-  "username": zod.string()
+  "username": zod.string(),
+  "role": zod.string(),
+  "permissions": zod.array(zod.string()),
+  "name": zod.string().nullish()
+})
+
+
+/**
+ * @summary List staff accounts (owner only)
+ */
+export const ListStaffResponseItem = zod.object({
+  "id": zod.number(),
+  "name": zod.string().nullable(),
+  "email": zod.string(),
+  "role": zod.string(),
+  "permissions": zod.array(zod.string()),
+  "createdAt": zod.string()
+})
+export const ListStaffResponse = zod.array(ListStaffResponseItem)
+
+
+/**
+ * @summary Create a staff account (owner only)
+ */
+export const CreateStaffBody = zod.object({
+  "name": zod.string(),
+  "email": zod.string(),
+  "password": zod.string(),
+  "permissions": zod.array(zod.string())
+})
+
+export const CreateStaffResponse = zod.object({
+  "id": zod.number(),
+  "name": zod.string().nullable(),
+  "email": zod.string(),
+  "role": zod.string(),
+  "permissions": zod.array(zod.string()),
+  "createdAt": zod.string()
+})
+
+
+/**
+ * @summary Update a staff account (owner only)
+ */
+export const UpdateStaffParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const UpdateStaffBody = zod.object({
+  "name": zod.string().optional(),
+  "password": zod.string().optional(),
+  "permissions": zod.array(zod.string()).optional()
+})
+
+export const UpdateStaffResponse = zod.object({
+  "id": zod.number(),
+  "name": zod.string().nullable(),
+  "email": zod.string(),
+  "role": zod.string(),
+  "permissions": zod.array(zod.string()),
+  "createdAt": zod.string()
+})
+
+
+/**
+ * @summary Delete a staff account (owner only)
+ */
+export const DeleteStaffParams = zod.object({
+  "id": zod.coerce.number()
 })
 
 

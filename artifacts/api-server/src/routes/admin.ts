@@ -1,8 +1,21 @@
 import { Router, type IRouter } from "express";
-import { eq, sql, desc, gte, and, lte, inArray } from "drizzle-orm";
+import { eq, sql, desc, gte, and, lte, inArray, or } from "drizzle-orm";
 import { db, ordersTable, orderItemsTable, menuItemsTable, adminAccountsTable } from "@workspace/db";
 import bcrypt from "bcryptjs";
 import { Resend } from "resend";
+import {
+  signToken,
+  requirePermission,
+  requireOwner,
+  PERMISSION_KEYS,
+  type AuthPayload,
+} from "../lib/auth";
+import {
+  CreateStaffBody,
+  UpdateStaffBody,
+  UpdateStaffParams,
+  DeleteStaffParams,
+} from "@workspace/api-zod";
 import {
   AdminLoginBody,
   AdminLoginResponse,
@@ -30,6 +43,29 @@ function getResend() {
 const LEGACY_USERNAME = "freshmood";
 const LEGACY_PASSWORD = "037425";
 
+function buildLoginResult(account: {
+  username: string;
+  role: string;
+  permissions: string[] | null;
+  name: string | null;
+}) {
+  const isOwner = account.role === "owner";
+  const permissions = isOwner ? [...PERMISSION_KEYS] : account.permissions ?? [];
+  const payload: AuthPayload = {
+    username: account.username,
+    role: account.role,
+    permissions,
+    name: account.name,
+  };
+  return AdminLoginResponse.parse({
+    token: signToken(payload),
+    username: account.username,
+    role: account.role,
+    permissions,
+    name: account.name,
+  });
+}
+
 function parseMonthRange(month: string): { start: Date; end: Date } | null {
   const match = month.match(/^(\d{4})-(\d{2})$/);
   if (!match) return null;
@@ -40,7 +76,7 @@ function parseMonthRange(month: string): { start: Date; end: Date } | null {
   return { start, end };
 }
 
-router.post("/admin/reset-data", async (req, res): Promise<void> => {
+router.post("/admin/reset-data", requireOwner, async (req, res): Promise<void> => {
   const { password } = req.body ?? {};
   if (!password) {
     res.status(400).json({ error: "Password wajib diisi" });
@@ -109,11 +145,16 @@ router.post("/admin/register", async (req, res): Promise<void> => {
     return;
   }
   const passwordHash = await bcrypt.hash(password, 10);
-  await db.insert(adminAccountsTable).values({ username, email, passwordHash });
+  const [created] = await db
+    .insert(adminAccountsTable)
+    .values({ username, email, passwordHash, role: "owner" })
+    .returning();
   res.json(
-    AdminLoginResponse.parse({
-      token: `fm-token-${Date.now()}`,
-      username,
+    buildLoginResult({
+      username: created.username,
+      role: created.role,
+      permissions: created.permissions,
+      name: created.name,
     })
   );
 });
@@ -209,32 +250,42 @@ router.post("/admin/login", async (req, res): Promise<void> => {
   }
   const { username, password } = parsed.data;
 
-  // Check DB accounts first
+  // Check DB accounts first — match by username OR email (staff log in with email)
   const accounts = await db
     .select()
     .from(adminAccountsTable)
-    .where(eq(adminAccountsTable.username, username))
+    .where(or(eq(adminAccountsTable.username, username), eq(adminAccountsTable.email, username)))
     .limit(1);
   if (accounts.length > 0) {
-    const valid = await bcrypt.compare(password, accounts[0].passwordHash);
+    const account = accounts[0];
+    const valid = await bcrypt.compare(password, account.passwordHash);
     if (!valid) {
       res.status(401).json({ error: "Username atau password salah" });
       return;
     }
-    res.json(AdminLoginResponse.parse({ token: `fm-token-${Date.now()}`, username }));
+    res.json(
+      buildLoginResult({
+        username: account.username,
+        role: account.role,
+        permissions: account.permissions,
+        name: account.name,
+      })
+    );
     return;
   }
 
-  // Fallback to legacy hardcoded credentials
+  // Fallback to legacy hardcoded credentials (owner)
   if (username === LEGACY_USERNAME && password === LEGACY_PASSWORD) {
-    res.json(AdminLoginResponse.parse({ token: `fm-token-${Date.now()}`, username }));
+    res.json(
+      buildLoginResult({ username: LEGACY_USERNAME, role: "owner", permissions: null, name: null })
+    );
     return;
   }
 
   res.status(401).json({ error: "Username atau password salah" });
 });
 
-router.get("/admin/dashboard-summary", async (req, res): Promise<void> => {
+router.get("/admin/dashboard-summary", requirePermission("dashboard"), async (req, res): Promise<void> => {
   const month = typeof req.query.month === "string" ? req.query.month : undefined;
   const range = month ? parseMonthRange(month) : null;
 
@@ -279,7 +330,7 @@ router.get("/admin/dashboard-summary", async (req, res): Promise<void> => {
   );
 });
 
-router.get("/admin/top-items", async (req, res): Promise<void> => {
+router.get("/admin/top-items", requirePermission("dashboard"), async (req, res): Promise<void> => {
   const queryResult = GetTopMenuItemsQueryParams.safeParse(req.query);
   const limit = queryResult.success ? (queryResult.data.limit ?? 10) : 10;
   const month = typeof req.query.month === "string" ? req.query.month : undefined;
@@ -315,7 +366,7 @@ router.get("/admin/top-items", async (req, res): Promise<void> => {
   res.json(GetTopMenuItemsResponse.parse(rows));
 });
 
-router.get("/admin/recent-orders", async (req, res): Promise<void> => {
+router.get("/admin/recent-orders", requirePermission("dashboard"), async (req, res): Promise<void> => {
   const queryResult = GetRecentOrdersQueryParams.safeParse(req.query);
   const limit = queryResult.success ? (queryResult.data.limit ?? 20) : 20;
 
@@ -351,7 +402,7 @@ router.get("/admin/recent-orders", async (req, res): Promise<void> => {
   res.json(GetRecentOrdersResponse.parse(ordersWithItems));
 });
 
-router.get("/admin/revenue-by-day", async (req, res): Promise<void> => {
+router.get("/admin/revenue-by-day", requirePermission("dashboard"), async (req, res): Promise<void> => {
   const month = typeof req.query.month === "string" ? req.query.month : undefined;
   const range = month ? parseMonthRange(month) : null;
 
@@ -417,7 +468,7 @@ router.get("/admin/revenue-by-day", async (req, res): Promise<void> => {
   res.json(GetRevenueByDayResponse.parse(result));
 });
 
-router.get("/admin/item-sales", async (req, res): Promise<void> => {
+router.get("/admin/item-sales", requirePermission("dashboard"), async (req, res): Promise<void> => {
   const month = typeof req.query.month === "string" ? req.query.month : undefined;
   const range = month ? parseMonthRange(month) : null;
 
@@ -479,7 +530,7 @@ router.get("/admin/item-sales", async (req, res): Promise<void> => {
   res.json(result);
 });
 
-router.get("/admin/payment-summary", async (req, res): Promise<void> => {
+router.get("/admin/payment-summary", requirePermission("payments"), async (req, res): Promise<void> => {
   const month = typeof req.query.month === "string" ? req.query.month : undefined;
   const range = month ? parseMonthRange(month) : null;
 
@@ -519,7 +570,7 @@ router.get("/admin/payment-summary", async (req, res): Promise<void> => {
   res.json(result);
 });
 
-router.get("/admin/leaderboard", async (req, res): Promise<void> => {
+router.get("/admin/leaderboard", requirePermission("leaderboard"), async (req, res): Promise<void> => {
   const month = typeof req.query.month === "string" ? req.query.month : undefined;
   const range = month ? parseMonthRange(month) : null;
 
@@ -558,6 +609,137 @@ router.get("/admin/monthly-revenue", async (_req, res): Promise<void> => {
     .orderBy(desc(sql`to_char(${ordersTable.createdAt}, 'YYYY-MM')`));
 
   res.json(rows);
+});
+
+// ---- Staff management (owner only) ----
+
+router.get("/admin/staff", requireOwner, async (_req, res): Promise<void> => {
+  const rows = await db
+    .select({
+      id: adminAccountsTable.id,
+      name: adminAccountsTable.name,
+      email: adminAccountsTable.email,
+      role: adminAccountsTable.role,
+      permissions: adminAccountsTable.permissions,
+      createdAt: adminAccountsTable.createdAt,
+    })
+    .from(adminAccountsTable)
+    .where(eq(adminAccountsTable.role, "staff"))
+    .orderBy(desc(adminAccountsTable.createdAt));
+
+  res.json(
+    rows.map((r) => ({
+      id: r.id,
+      name: r.name,
+      email: r.email,
+      role: r.role,
+      permissions: r.permissions ?? [],
+      createdAt: r.createdAt.toISOString(),
+    }))
+  );
+});
+
+router.post("/admin/staff", requireOwner, async (req, res): Promise<void> => {
+  const parsed = CreateStaffBody.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: parsed.error.message });
+    return;
+  }
+  const { name, email, password, permissions } = parsed.data;
+
+  const existing = await db
+    .select()
+    .from(adminAccountsTable)
+    .where(or(eq(adminAccountsTable.email, email), eq(adminAccountsTable.username, email)))
+    .limit(1);
+  if (existing.length > 0) {
+    res.status(400).json({ error: "Email sudah digunakan" });
+    return;
+  }
+
+  const passwordHash = await bcrypt.hash(password, 10);
+  const [created] = await db
+    .insert(adminAccountsTable)
+    .values({
+      username: email,
+      email,
+      name,
+      passwordHash,
+      role: "staff",
+      permissions,
+    })
+    .returning();
+
+  res.json({
+    id: created.id,
+    name: created.name,
+    email: created.email,
+    role: created.role,
+    permissions: created.permissions ?? [],
+    createdAt: created.createdAt.toISOString(),
+  });
+});
+
+router.patch("/admin/staff/:id", requireOwner, async (req, res): Promise<void> => {
+  const paramsParsed = UpdateStaffParams.safeParse(req.params);
+  if (!paramsParsed.success) {
+    res.status(400).json({ error: paramsParsed.error.message });
+    return;
+  }
+  const bodyParsed = UpdateStaffBody.safeParse(req.body);
+  if (!bodyParsed.success) {
+    res.status(400).json({ error: bodyParsed.error.message });
+    return;
+  }
+  const { id } = paramsParsed.data;
+  const { name, password, permissions } = bodyParsed.data;
+
+  const existing = await db
+    .select()
+    .from(adminAccountsTable)
+    .where(and(eq(adminAccountsTable.id, id), eq(adminAccountsTable.role, "staff")))
+    .limit(1);
+  if (existing.length === 0) {
+    res.status(404).json({ error: "Staf tidak ditemukan" });
+    return;
+  }
+
+  const updates: Partial<typeof adminAccountsTable.$inferInsert> = {};
+  if (name !== undefined) updates.name = name;
+  if (permissions !== undefined) updates.permissions = permissions;
+  if (password !== undefined && password.length > 0) {
+    updates.passwordHash = await bcrypt.hash(password, 10);
+  }
+
+  const [updated] = await db
+    .update(adminAccountsTable)
+    .set(updates)
+    .where(eq(adminAccountsTable.id, id))
+    .returning();
+
+  res.json({
+    id: updated.id,
+    name: updated.name,
+    email: updated.email,
+    role: updated.role,
+    permissions: updated.permissions ?? [],
+    createdAt: updated.createdAt.toISOString(),
+  });
+});
+
+router.delete("/admin/staff/:id", requireOwner, async (req, res): Promise<void> => {
+  const paramsParsed = DeleteStaffParams.safeParse(req.params);
+  if (!paramsParsed.success) {
+    res.status(400).json({ error: paramsParsed.error.message });
+    return;
+  }
+  const { id } = paramsParsed.data;
+
+  await db
+    .delete(adminAccountsTable)
+    .where(and(eq(adminAccountsTable.id, id), eq(adminAccountsTable.role, "staff")));
+
+  res.json({ success: true });
 });
 
 export default router;

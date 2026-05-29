@@ -12,6 +12,7 @@ import {
   GetMenuItemResponse,
   UpdateMenuItemResponse,
 } from "@workspace/api-zod";
+import { requirePermission } from "../lib/auth";
 
 const router: IRouter = Router();
 
@@ -58,7 +59,7 @@ router.get("/menu-items", async (req, res): Promise<void> => {
   res.json(ListMenuItemsResponse.parse(parsed));
 });
 
-router.post("/menu-items", async (req, res): Promise<void> => {
+router.post("/menu-items", requirePermission("menu"), async (req, res): Promise<void> => {
   const parsed = CreateMenuItemBody.safeParse(req.body);
   if (!parsed.success) {
     res.status(400).json({ error: parsed.error.message });
@@ -127,7 +128,7 @@ router.get("/menu-items/:id", async (req, res): Promise<void> => {
   res.json(GetMenuItemResponse.parse({ ...item, price: parseFloat(item.price) }));
 });
 
-router.patch("/menu-items/:id", async (req, res): Promise<void> => {
+router.patch("/menu-items/:id", requirePermission("menu"), async (req, res): Promise<void> => {
   const rawId = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
   const paramsResult = UpdateMenuItemParams.safeParse({ id: parseInt(rawId, 10) });
   if (!paramsResult.success) {
@@ -173,7 +174,7 @@ router.patch("/menu-items/:id", async (req, res): Promise<void> => {
   res.json(UpdateMenuItemResponse.parse({ ...item, price: parseFloat(item.price) }));
 });
 
-router.delete("/menu-items/:id", async (req, res): Promise<void> => {
+router.delete("/menu-items/:id", requirePermission("menu"), async (req, res): Promise<void> => {
   const rawId = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
   const paramsResult = DeleteMenuItemParams.safeParse({ id: parseInt(rawId, 10) });
   if (!paramsResult.success) {

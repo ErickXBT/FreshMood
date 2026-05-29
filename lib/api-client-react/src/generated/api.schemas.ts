@@ -325,6 +325,33 @@ export interface AdminLoginInput {
 export interface AdminLoginResult {
   token: string;
   username: string;
+  role: string;
+  permissions: string[];
+  /** @nullable */
+  name?: string | null;
+}
+
+export interface StaffAccount {
+  id: number;
+  /** @nullable */
+  name: string | null;
+  email: string;
+  role: string;
+  permissions: string[];
+  createdAt: string;
+}
+
+export interface CreateStaffInput {
+  name: string;
+  email: string;
+  password: string;
+  permissions: string[];
+}
+
+export interface UpdateStaffInput {
+  name?: string;
+  password?: string;
+  permissions?: string[];
 }
 
 export type ListMenuItemsParams = {

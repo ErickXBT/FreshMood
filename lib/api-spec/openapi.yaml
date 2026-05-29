@@ -755,6 +755,88 @@ paths:
         "401":
           description: Invalid credentials
 
+  /admin/staff:
+    get:
+      operationId: listStaff
+      tags: [admin]
+      summary: List staff accounts (owner only)
+      responses:
+        "200":
+          description: List of staff
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/StaffAccount"
+        "403":
+          description: Forbidden
+    post:
+      operationId: createStaff
+      tags: [admin]
+      summary: Create a staff account (owner only)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateStaffInput"
+      responses:
+        "200":
+          description: Created staff
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StaffAccount"
+        "400":
+          description: Validation error or email already taken
+        "403":
+          description: Forbidden
+
+  /admin/staff/{id}:
+    patch:
+      operationId: updateStaff
+      tags: [admin]
+      summary: Update a staff account (owner only)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateStaffInput"
+      responses:
+        "200":
+          description: Updated staff
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StaffAccount"
+        "403":
+          description: Forbidden
+        "404":
+          description: Not found
+    delete:
+      operationId: deleteStaff
+      tags: [admin]
+      summary: Delete a staff account (owner only)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Deleted
+        "403":
+          description: Forbidden
+
 components:
   schemas:
     HealthStatus:
@@ -1215,9 +1297,63 @@ components:
 
     AdminLoginResult:
       type: object
-      required: [token, username]
+      required: [token, username, role, permissions]
       properties:
         token:
           type: string
         username:
           type: string
+        role:
+          type: string
+        permissions:
+          type: array
+          items:
+            type: string
+        name:
+          type: ["string", "null"]
+
+    StaffAccount:
+      type: object
+      required: [id, name, email, role, permissions, createdAt]
+      properties:
+        id:
+          type: integer
+        name:
+          type: ["string", "null"]
+        email:
+          type: string
+        role:
+          type: string
+        permissions:
+          type: array
+          items:
+            type: string
+        createdAt:
+          type: string
+
+    CreateStaffInput:
+      type: object
+      required: [name, email, password, permissions]
+      properties:
+        name:
+          type: string
+        email:
+          type: string
+        password:
+          type: string
+        permissions:
+          type: array
+          items:
+            type: string
+
+    UpdateStaffInput:
+      type: object
+      properties:
+        name:
+          type: string
+        password:
+          type: string
+        permissions:
+          type: array
+          items:
+            type: string
