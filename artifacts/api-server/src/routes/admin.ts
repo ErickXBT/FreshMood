@@ -19,7 +19,13 @@ import {
 } from "@workspace/api-zod";
 
 const router: IRouter = Router();
-const resend = new Resend(process.env.RESEND_API_KEY);
+
+function getResend() {
+  if (!process.env.RESEND_API_KEY) {
+    throw new Error("RESEND_API_KEY tidak dikonfigurasi. Fitur email tidak tersedia.");
+  }
+  return new Resend(process.env.RESEND_API_KEY);
+}
 
 const LEGACY_USERNAME = "freshmood";
 const LEGACY_PASSWORD = "037425";
@@ -134,7 +140,7 @@ router.post("/admin/forgot-password", async (req, res): Promise<void> => {
     .update(adminAccountsTable)
     .set({ resetOtp: otp, resetOtpExpiresAt: expiresAt })
     .where(eq(adminAccountsTable.email, email));
-  await resend.emails.send({
+  await getResend().emails.send({
     from: "FreshMood <onboarding@resend.dev>",
     to: email,
     subject: "Kode Reset Password FreshMood",
