@@ -2,15 +2,21 @@ import { Router, type IRouter } from "express";
 import { db } from "@workspace/db";
 import { cashiersTable } from "@workspace/db";
 import { eq } from "drizzle-orm";
-import { requireAuth } from "../lib/auth";
+import { requireAnyPermission } from "../lib/auth";
 
 const router: IRouter = Router();
 
-router.get("/admin/cashiers", requireAuth, async (_req, res): Promise<void> => {
+// Cashier management is shared by the Karyawan (employees) page and the
+// cashier-switch dialog used during the kasir flow, so it requires either the
+// employees or kasir permission (owner always passes).
+const requireCashierAccess = requireAnyPermission(["employees", "kasir"]);
+
+router.get("/admin/cashiers", requireCashierAccess, async (_req, res): Promise<void> => {
   const cashiers = await db.select().from(cashiersTable).orderBy(cashiersTable.createdAt);
   res.json(cashiers);
 });
 
+// Public: customer-facing pages display the active cashier name on receipts.
 router.get("/admin/cashiers/active", async (_req, res): Promise<void> => {
   const active = await db
     .select()
@@ -20,7 +26,7 @@ router.get("/admin/cashiers/active", async (_req, res): Promise<void> => {
   res.json(active[0] ?? null);
 });
 
-router.post("/admin/cashiers/activate", requireAuth, async (req, res): Promise<void> => {
+router.post("/admin/cashiers/activate", requireCashierAccess, async (req, res): Promise<void> => {
   const { cashierId } = req.body ?? {};
   await db.update(cashiersTable).set({ isActive: false });
   if (cashierId != null) {
@@ -39,7 +45,7 @@ router.post("/admin/cashiers/activate", requireAuth, async (req, res): Promise<v
   res.json(null);
 });
 
-router.post("/admin/cashiers", requireAuth, async (req, res): Promise<void> => {
+router.post("/admin/cashiers", requireCashierAccess, async (req, res): Promise<void> => {
   const name = req.body?.name?.trim();
   if (!name) {
     res.status(400).json({ error: "Nama kasir wajib diisi" });
@@ -52,7 +58,7 @@ router.post("/admin/cashiers", requireAuth, async (req, res): Promise<void> => {
   res.json(cashier);
 });
 
-router.delete("/admin/cashiers/:id", requireAuth, async (req, res): Promise<void> => {
+router.delete("/admin/cashiers/:id", requireCashierAccess, async (req, res): Promise<void> => {
   const id = Number(req.params.id);
   await db.update(cashiersTable).set({ isActive: false }).where(eq(cashiersTable.id, id));
   await db.delete(cashiersTable).where(eq(cashiersTable.id, id));

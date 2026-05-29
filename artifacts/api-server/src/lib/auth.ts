@@ -168,6 +168,25 @@ export function requirePermission(key: PermissionKey) {
   };
 }
 
+/**
+ * Allows the request through when the caller holds ANY of the listed
+ * permissions (owner always passes). Use for endpoints shared by multiple
+ * permission areas (e.g. order list used by both orders and kitchen).
+ */
+export function requireAnyPermission(keys: PermissionKey[]) {
+  return (req: Request, res: Response, next: NextFunction): void => {
+    if (!req.auth) {
+      res.status(401).json({ error: "Sesi tidak valid. Silakan login ulang." });
+      return;
+    }
+    if (!keys.some((key) => hasPermission(req.auth!, key))) {
+      res.status(403).json({ error: "Kamu tidak memiliki akses ke area ini." });
+      return;
+    }
+    next();
+  };
+}
+
 export function requireOwner(req: Request, res: Response, next: NextFunction): void {
   if (!req.auth) {
     res.status(401).json({ error: "Sesi tidak valid. Silakan login ulang." });

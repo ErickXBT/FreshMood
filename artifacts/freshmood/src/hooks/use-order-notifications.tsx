@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 import { useListOrders, getListOrdersQueryKey } from "@workspace/api-client-react";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/use-auth";
 
 const LAST_ID_KEY = "freshmood-last-order-id";
 const SOUND_KEY   = "freshmood-sound-enabled";
@@ -36,6 +37,9 @@ function playDing() {
 
 export function useOrderNotifications() {
   const { toast } = useToast();
+  const { isOwner, hasPermission } = useAuth();
+  const canViewOrders =
+    isOwner || hasPermission("orders") || hasPermission("kitchen") || hasPermission("kasir");
 
   const lastIdRef      = useRef<number>(parseInt(localStorage.getItem(LAST_ID_KEY) ?? "0", 10));
   const initializedRef = useRef(false);
@@ -57,7 +61,8 @@ export function useOrderNotifications() {
     {
       query: {
         queryKey: getListOrdersQueryKey({}),
-        refetchInterval: 8_000,
+        enabled: canViewOrders,
+        refetchInterval: canViewOrders ? 8_000 : false,
         refetchIntervalInBackground: true,
       },
     }

@@ -11,7 +11,7 @@ import {
   GetOrderResponse,
   UpdateOrderStatusResponse,
 } from "@workspace/api-zod";
-import { hasPermission, requireAuth } from "../lib/auth";
+import { hasPermission, requireAnyPermission, requirePermission } from "../lib/auth";
 
 const router: IRouter = Router();
 
@@ -35,7 +35,10 @@ async function getOrderWithItems(orderId: number) {
   };
 }
 
-router.get("/orders", requireAuth, async (req, res): Promise<void> => {
+// Order list/history is shared by the Orders, Kitchen and Kasir areas (the
+// kasir/kitchen new-order notification poller also reads it), so any of those
+// permissions grants access.
+router.get("/orders", requireAnyPermission(["orders", "kitchen", "kasir"]), async (req, res): Promise<void> => {
   const queryResult = ListOrdersQueryParams.safeParse(req.query);
   if (!queryResult.success) {
     res.status(400).json({ error: queryResult.error.message });
@@ -184,7 +187,9 @@ router.get("/orders/:id", async (req, res): Promise<void> => {
   res.json(GetOrderResponse.parse(order));
 });
 
-router.patch("/orders/:id", requireAuth, async (req, res): Promise<void> => {
+// Status updates happen in the Kitchen flow; cancelling additionally requires
+// the cancel_transactions permission (checked below).
+router.patch("/orders/:id", requirePermission("kitchen"), async (req, res): Promise<void> => {
   const rawId = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
   const paramsResult = UpdateOrderStatusParams.safeParse({ id: parseInt(rawId, 10) });
   if (!paramsResult.success) {

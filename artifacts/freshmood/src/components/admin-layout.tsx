@@ -68,6 +68,10 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
     item.perm === "__owner__" ? isOwner : hasPermission(item.perm)
   );
 
+  // Cashier switching/management is only for users with the kasir or employees
+  // area (owner always). Hide the control otherwise — the server enforces this too.
+  const canManageCashier = isOwner || hasPermission("kasir") || hasPermission("employees");
+
   const showBadge = (href: string) =>
     NOTIFIED_HREFS.has(href) && newOrderCount > 0;
 
@@ -144,6 +148,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
           </button>
 
           {/* Switch Cashier */}
+          {canManageCashier && (
           <button
             onClick={() => setCashierDialogOpen(true)}
             className={`w-full flex items-center gap-2 px-3 py-2.5 rounded-lg border transition-colors text-left ${
@@ -171,6 +176,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
               </>
             )}
           </button>
+          )}
 
           <div className="flex items-center justify-between px-2">
             <span className="text-sm font-medium">Hi, {name || username}</span>
