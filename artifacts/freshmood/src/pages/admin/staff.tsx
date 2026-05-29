@@ -22,6 +22,7 @@ import {
   Eye,
   EyeOff,
   X,
+  KeyRound,
 } from "lucide-react";
 import { format, parseISO } from "date-fns";
 
@@ -110,11 +111,15 @@ export default function AdminStaff() {
   const [newPermissions, setNewPermissions] = useState<string[]>([]);
   const [showForm, setShowForm] = useState(false);
 
-  // Edit state
+  // Edit state (access only)
   const [editingId, setEditingId] = useState<number | null>(null);
   const [editName, setEditName] = useState("");
-  const [editPassword, setEditPassword] = useState("");
   const [editPermissions, setEditPermissions] = useState<string[]>([]);
+
+  // Reset password state
+  const [resetId, setResetId] = useState<number | null>(null);
+  const [resetPassword, setResetPassword] = useState("");
+  const [showResetPassword, setShowResetPassword] = useState(false);
 
   const invalidate = () =>
     queryClient.invalidateQueries({ queryKey: getListStaffQueryKey() });
@@ -156,31 +161,38 @@ export default function AdminStaff() {
   };
 
   const startEdit = (s: StaffAccount) => {
+    setResetId(null);
     setEditingId(s.id);
     setEditName(s.name ?? "");
-    setEditPassword("");
     setEditPermissions(s.permissions);
   };
 
   const cancelEdit = () => {
     setEditingId(null);
     setEditName("");
-    setEditPassword("");
     setEditPermissions([]);
   };
 
+  const startReset = (s: StaffAccount) => {
+    setEditingId(null);
+    setResetId(s.id);
+    setResetPassword("");
+    setShowResetPassword(false);
+  };
+
+  const cancelReset = () => {
+    setResetId(null);
+    setResetPassword("");
+    setShowResetPassword(false);
+  };
+
   const handleUpdate = async (id: number) => {
-    if (editPassword && editPassword.length < 6) {
-      toast({ title: "Error", description: "Password minimal 6 karakter", variant: "destructive" });
-      return;
-    }
     try {
       await updateMutation.mutateAsync({
         id,
         data: {
           name: editName.trim(),
           permissions: editPermissions,
-          ...(editPassword ? { password: editPassword } : {}),
         },
       });
       invalidate();
@@ -188,6 +200,25 @@ export default function AdminStaff() {
       toast({ title: "Tersimpan", description: "Perubahan akses staf disimpan" });
     } catch (err: unknown) {
       const msg = (err as { data?: { error?: string } })?.data?.error ?? "Tidak dapat menyimpan perubahan";
+      toast({ title: "Gagal", description: msg, variant: "destructive" });
+    }
+  };
+
+  const handleResetPassword = async (id: number) => {
+    if (!resetPassword || resetPassword.length < 6) {
+      toast({ title: "Error", description: "Password minimal 6 karakter", variant: "destructive" });
+      return;
+    }
+    try {
+      await updateMutation.mutateAsync({
+        id,
+        data: { password: resetPassword },
+      });
+      invalidate();
+      cancelReset();
+      toast({ title: "Password direset", description: "Password baru langsung berlaku" });
+    } catch (err: unknown) {
+      const msg = (err as { data?: { error?: string } })?.data?.error ?? "Tidak dapat mereset password";
       toast({ title: "Gagal", description: msg, variant: "destructive" });
     }
   };
@@ -315,6 +346,7 @@ export default function AdminStaff() {
             ) : (
               staff.map((s) => {
                 const isEditing = editingId === s.id;
+                const isResetting = resetId === s.id;
                 return (
                   <div key={s.id} className="rounded-xl border border-border">
                     <div className="flex items-center gap-3 px-4 py-3">
@@ -328,10 +360,14 @@ export default function AdminStaff() {
                       <span className="text-xs text-muted-foreground hidden sm:block">
                         {format(parseISO(s.createdAt), "d MMM yyyy")}
                       </span>
-                      {!isEditing ? (
+                      {!isEditing && !isResetting ? (
                         <div className="flex items-center gap-1 shrink-0">
                           <Button variant="outline" size="sm" className="text-xs" onClick={() => startEdit(s)}>
                             Atur Akses
+                          </Button>
+                          <Button variant="outline" size="sm" className="text-xs" onClick={() => startReset(s)}>
+                            <KeyRound className="w-3.5 h-3.5 mr-1" />
+                            Reset Password
                           </Button>
                           <Button
                             variant="ghost"
@@ -346,7 +382,7 @@ export default function AdminStaff() {
                       ) : null}
                     </div>
 
-                    {!isEditing && (
+                    {!isEditing && !isResetting && (
                       <div className="px-4 pb-3 flex flex-wrap gap-1.5">
                         {s.permissions.length === 0 ? (
                           <span className="text-xs text-muted-foreground italic">Belum ada akses diberikan</span>
@@ -365,20 +401,9 @@ export default function AdminStaff() {
 
                     {isEditing && (
                       <div className="px-4 pb-4 space-y-4 border-t pt-4">
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                          <div className="space-y-1.5">
-                            <label className="text-sm font-medium">Nama</label>
-                            <Input value={editName} onChange={(e) => setEditName(e.target.value)} />
-                          </div>
-                          <div className="space-y-1.5">
-                            <label className="text-sm font-medium">Password Baru (opsional)</label>
-                            <Input
-                              type="password"
-                              placeholder="Kosongkan jika tidak diubah"
-                              value={editPassword}
-                              onChange={(e) => setEditPassword(e.target.value)}
-                            />
-                          </div>
+                        <div className="space-y-1.5">
+                          <label className="text-sm font-medium">Nama</label>
+                          <Input value={editName} onChange={(e) => setEditName(e.target.value)} />
                         </div>
                         <div className="space-y-2">
                           <label className="text-sm font-medium">Hak Akses</label>
@@ -396,6 +421,44 @@ export default function AdminStaff() {
                         </div>
                       </div>
                     )}
+
+                    {isResetting && (
+                      <div className="px-4 pb-4 space-y-4 border-t pt-4">
+                        <div className="space-y-1.5">
+                          <label className="text-sm font-medium">Password Baru</label>
+                          <div className="relative">
+                            <Input
+                              type={showResetPassword ? "text" : "password"}
+                              placeholder="Minimal 6 karakter"
+                              value={resetPassword}
+                              onChange={(e) => setResetPassword(e.target.value)}
+                              className="pr-10"
+                              autoFocus
+                            />
+                            <button
+                              type="button"
+                              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                              onClick={() => setShowResetPassword(!showResetPassword)}
+                            >
+                              {showResetPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                            </button>
+                          </div>
+                          <p className="text-xs text-muted-foreground">
+                            Password baru langsung berlaku. Beritahu {s.name ?? s.email} untuk login dengan password ini.
+                          </p>
+                        </div>
+                        <div className="flex gap-2">
+                          <Button size="sm" onClick={() => handleResetPassword(s.id)} disabled={updateMutation.isPending}>
+                            {updateMutation.isPending
+                              ? <><Loader2 className="w-4 h-4 mr-1 animate-spin" />Menyimpan...</>
+                              : <><KeyRound className="w-4 h-4 mr-1" />Simpan Password</>}
+                          </Button>
+                          <Button size="sm" variant="outline" onClick={cancelReset}>
+                            Batal
+                          </Button>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 );
               })
@@ -406,6 +469,7 @@ export default function AdminStaff() {
         <div className="bg-muted/50 rounded-xl p-4 text-sm text-muted-foreground space-y-1.5">
           <p className="font-semibold text-foreground text-xs uppercase tracking-wide">Cara Kerja</p>
           <p>• Staf login memakai <strong>email</strong> dan password yang kamu buat di sini</p>
+          <p>• Lupa password? Pakai <strong>Reset Password</strong> untuk membuat password baru yang langsung berlaku</p>
           <p>• Mereka hanya melihat menu samping untuk area yang diizinkan</p>
           <p>• Pemilik (owner) selalu punya akses penuh ke semua area</p>
         </div>
