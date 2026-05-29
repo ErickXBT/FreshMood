@@ -23,6 +23,7 @@ import {
   BellRing,
   BellOff,
   ShieldCheck,
+  FileBarChart,
 } from "lucide-react";
 import { useTheme } from "@/hooks/use-theme";
 import { Button } from "@/components/ui/button";
@@ -54,6 +55,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
 
   const allNavItems = [
     { href: "/admin/dashboard", label: "Dashboard", icon: LayoutDashboard, perm: "dashboard" },
+    { href: "/admin/reports",   label: "Laporan",   icon: FileBarChart, perm: "dashboard" },
     { href: "/admin/kitchen",   label: "Kitchen",   icon: ChefHat, perm: "kitchen" },
     { href: "/admin/menu",      label: "Menu",       icon: MenuSquare, perm: "menu" },
     { href: "/admin/orders",    label: "Orders",     icon: ListOrdered, perm: "orders", anyPerm: ["orders", "kasir"] },

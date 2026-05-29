@@ -467,6 +467,28 @@ export const GetRevenueByDayResponse = zod.array(GetRevenueByDayResponseItem)
 
 
 /**
+ * @summary Get sales aggregated into time buckets (daily, weekly, monthly, yearly) with summary totals
+ */
+export const GetSalesReportQueryParams = zod.object({
+  "period": zod.enum(['daily', 'weekly', 'monthly', 'yearly']).describe('Aggregation period')
+})
+
+export const GetSalesReportResponse = zod.object({
+  "period": zod.string(),
+  "summary": zod.object({
+  "totalRevenue": zod.number(),
+  "totalOrders": zod.number(),
+  "averageOrderValue": zod.number()
+}),
+  "buckets": zod.array(zod.object({
+  "key": zod.string(),
+  "revenue": zod.number(),
+  "orderCount": zod.number()
+}))
+})
+
+
+/**
  * @summary Get all menu items with sales data sorted by qty sold
  */
 export const GetItemSalesQueryParams = zod.object({

@@ -243,6 +243,24 @@ export interface RevenueByDay {
   orderCount: number;
 }
 
+export interface SalesReportSummary {
+  totalRevenue: number;
+  totalOrders: number;
+  averageOrderValue: number;
+}
+
+export interface SalesReportBucket {
+  key: string;
+  revenue: number;
+  orderCount: number;
+}
+
+export interface SalesReport {
+  period: string;
+  summary: SalesReportSummary;
+  buckets: SalesReportBucket[];
+}
+
 export interface ItemSale {
   menuItemId: number;
   name: string;
@@ -410,6 +428,23 @@ days?: number;
  */
 month?: string;
 };
+
+export type GetSalesReportParams = {
+/**
+ * Aggregation period
+ */
+period: GetSalesReportPeriod;
+};
+
+export type GetSalesReportPeriod = typeof GetSalesReportPeriod[keyof typeof GetSalesReportPeriod];
+
+
+export const GetSalesReportPeriod = {
+  daily: 'daily',
+  weekly: 'weekly',
+  monthly: 'monthly',
+  yearly: 'yearly',
+} as const;
 
 export type GetItemSalesParams = {
 /**

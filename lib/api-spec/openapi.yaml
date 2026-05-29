@@ -479,6 +479,27 @@ paths:
                 items:
                   $ref: "#/components/schemas/RevenueByDay"
 
+  /admin/sales-report:
+    get:
+      operationId: getSalesReport
+      tags: [admin]
+      summary: Get sales aggregated into time buckets (daily, weekly, monthly, yearly) with summary totals
+      parameters:
+        - name: period
+          in: query
+          required: true
+          description: Aggregation period
+          schema:
+            type: string
+            enum: [daily, weekly, monthly, yearly]
+      responses:
+        "200":
+          description: Sales report
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SalesReport"
+
   /admin/item-sales:
     get:
       operationId: getItemSales
@@ -1168,6 +1189,41 @@ components:
           type: number
         orderCount:
           type: integer
+
+    SalesReportSummary:
+      type: object
+      required: [totalRevenue, totalOrders, averageOrderValue]
+      properties:
+        totalRevenue:
+          type: number
+        totalOrders:
+          type: integer
+        averageOrderValue:
+          type: number
+
+    SalesReportBucket:
+      type: object
+      required: [key, revenue, orderCount]
+      properties:
+        key:
+          type: string
+        revenue:
+          type: number
+        orderCount:
+          type: integer
+
+    SalesReport:
+      type: object
+      required: [period, summary, buckets]
+      properties:
+        period:
+          type: string
+        summary:
+          $ref: "#/components/schemas/SalesReportSummary"
+        buckets:
+          type: array
+          items:
+            $ref: "#/components/schemas/SalesReportBucket"
 
     ItemSale:
       type: object

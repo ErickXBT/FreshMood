@@ -17,6 +17,7 @@ import AdminMenu from "@/pages/admin/menu";
 import AdminOrders from "@/pages/admin/orders";
 import AdminLeaderboard from "@/pages/admin/leaderboard";
 import AdminPayments from "@/pages/admin/payments";
+import AdminReports from "@/pages/admin/reports";
 import AdminSettings from "@/pages/admin/settings";
 import AdminEmployees from "@/pages/admin/employees";
 import AdminStaff from "@/pages/admin/staff";
@@ -184,6 +185,9 @@ function Router() {
       </Route>
       <Route path="/admin/payments">
         <ProtectedRoute permission="payments"><AdminPayments /></ProtectedRoute>
+      </Route>
+      <Route path="/admin/reports">
+        <ProtectedRoute permission="dashboard"><AdminReports /></ProtectedRoute>
       </Route>
       <Route path="/admin/employees">
         <ProtectedRoute permission="employees"><AdminEmployees /></ProtectedRoute>

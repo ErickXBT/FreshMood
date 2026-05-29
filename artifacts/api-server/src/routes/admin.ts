@@ -29,6 +29,8 @@ import {
   GetRecentOrdersResponse,
   GetRevenueByDayQueryParams,
   GetRevenueByDayResponse,
+  GetSalesReportQueryParams,
+  GetSalesReportResponse,
 } from "@workspace/api-zod";
 
 const router: IRouter = Router();
@@ -469,6 +471,82 @@ router.get("/admin/revenue-by-day", requirePermission("dashboard"), async (req, 
   }
 
   res.json(GetRevenueByDayResponse.parse(result));
+});
+
+function buildReportBuckets(period: string): Array<{ key: string }> {
+  const out: Array<{ key: string }> = [];
+  const now = new Date();
+  if (period === "weekly") {
+    const today = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
+    const dow = (today.getUTCDay() + 6) % 7; // 0 = Monday
+    const monday = new Date(today);
+    monday.setUTCDate(today.getUTCDate() - dow);
+    for (let i = 11; i >= 0; i--) {
+      const d = new Date(monday);
+      d.setUTCDate(monday.getUTCDate() - i * 7);
+      out.push({ key: d.toISOString().slice(0, 10) });
+    }
+  } else if (period === "monthly") {
+    for (let i = 11; i >= 0; i--) {
+      const d = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - i, 1));
+      out.push({ key: d.toISOString().slice(0, 7) });
+    }
+  } else if (period === "yearly") {
+    for (let i = 4; i >= 0; i--) {
+      const d = new Date(Date.UTC(now.getUTCFullYear() - i, 0, 1));
+      out.push({ key: d.toISOString().slice(0, 4) });
+    }
+  } else {
+    // daily — last 30 days
+    for (let i = 29; i >= 0; i--) {
+      const d = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() - i));
+      out.push({ key: d.toISOString().slice(0, 10) });
+    }
+  }
+  return out;
+}
+
+router.get("/admin/sales-report", requirePermission("dashboard"), async (req, res): Promise<void> => {
+  const parsed = GetSalesReportQueryParams.safeParse(req.query);
+  const period = parsed.success ? parsed.data.period : "daily";
+
+  // truncUnit and fmt come from a fixed whitelist (never user input), so it is
+  // safe to inline them. Reusing one expression keeps SELECT and GROUP BY identical.
+  const truncUnit =
+    period === "yearly" ? "year" : period === "monthly" ? "month" : period === "weekly" ? "week" : "day";
+  const fmt = period === "yearly" ? "YYYY" : period === "monthly" ? "YYYY-MM" : "YYYY-MM-DD";
+  const truncExpr = sql`date_trunc('${sql.raw(truncUnit)}', ${ordersTable.createdAt} AT TIME ZONE 'UTC')`;
+
+  const rows = await db
+    .select({
+      key: sql<string>`to_char(${truncExpr}, '${sql.raw(fmt)}')`,
+      revenue: sql<number>`coalesce(sum(${ordersTable.total}), 0)::float`,
+      orderCount: sql<number>`count(*)::int`,
+    })
+    .from(ordersTable)
+    .where(eq(ordersTable.paymentStatus, "paid"))
+    .groupBy(truncExpr);
+
+  const rowMap = new Map(rows.map((r) => [r.key, r]));
+  const buckets = buildReportBuckets(period).map((b) => {
+    const found = rowMap.get(b.key);
+    return { key: b.key, revenue: found?.revenue ?? 0, orderCount: found?.orderCount ?? 0 };
+  });
+
+  const totalRevenue = buckets.reduce((s, b) => s + b.revenue, 0);
+  const totalOrders = buckets.reduce((s, b) => s + b.orderCount, 0);
+
+  res.json(
+    GetSalesReportResponse.parse({
+      period,
+      summary: {
+        totalRevenue,
+        totalOrders,
+        averageOrderValue: totalOrders > 0 ? totalRevenue / totalOrders : 0,
+      },
+      buckets,
+    })
+  );
 });
 
 router.get("/admin/item-sales", requirePermission("dashboard"), async (req, res): Promise<void> => {
