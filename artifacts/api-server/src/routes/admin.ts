@@ -5,10 +5,10 @@ import bcrypt from "bcryptjs";
 import { Resend } from "resend";
 import {
   signToken,
+  requireAuth,
   requirePermission,
   requireOwner,
   PERMISSION_KEYS,
-  type AuthPayload,
 } from "../lib/auth";
 import {
   CreateStaffBody,
@@ -44,21 +44,22 @@ const LEGACY_USERNAME = "freshmood";
 const LEGACY_PASSWORD = "037425";
 
 function buildLoginResult(account: {
+  id: number | null;
   username: string;
   role: string;
   permissions: string[] | null;
   name: string | null;
+  legacy?: boolean;
 }) {
   const isOwner = account.role === "owner";
   const permissions = isOwner ? [...PERMISSION_KEYS] : account.permissions ?? [];
-  const payload: AuthPayload = {
+  const token = signToken({
+    sub: account.id,
     username: account.username,
-    role: account.role,
-    permissions,
-    name: account.name,
-  };
+    legacy: account.legacy,
+  });
   return AdminLoginResponse.parse({
-    token: signToken(payload),
+    token,
     username: account.username,
     role: account.role,
     permissions,
@@ -151,6 +152,7 @@ router.post("/admin/register", async (req, res): Promise<void> => {
     .returning();
   res.json(
     buildLoginResult({
+      id: created.id,
       username: created.username,
       role: created.role,
       permissions: created.permissions,
@@ -265,6 +267,7 @@ router.post("/admin/login", async (req, res): Promise<void> => {
     }
     res.json(
       buildLoginResult({
+        id: account.id,
         username: account.username,
         role: account.role,
         permissions: account.permissions,
@@ -277,7 +280,7 @@ router.post("/admin/login", async (req, res): Promise<void> => {
   // Fallback to legacy hardcoded credentials (owner)
   if (username === LEGACY_USERNAME && password === LEGACY_PASSWORD) {
     res.json(
-      buildLoginResult({ username: LEGACY_USERNAME, role: "owner", permissions: null, name: null })
+      buildLoginResult({ id: null, username: LEGACY_USERNAME, role: "owner", permissions: null, name: null, legacy: true })
     );
     return;
   }
@@ -597,7 +600,7 @@ router.get("/admin/leaderboard", requirePermission("leaderboard"), async (req, r
   res.json(ranked);
 });
 
-router.get("/admin/monthly-revenue", async (_req, res): Promise<void> => {
+router.get("/admin/monthly-revenue", requireAuth, async (_req, res): Promise<void> => {
   const rows = await db
     .select({
       month: sql<string>`to_char(${ordersTable.createdAt}, 'YYYY-MM')`,

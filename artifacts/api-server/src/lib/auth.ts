@@ -1,5 +1,7 @@
 import jwt from "jsonwebtoken";
 import type { Request, Response, NextFunction } from "express";
+import { eq } from "drizzle-orm";
+import { db, adminAccountsTable } from "@workspace/db";
 
 export const PERMISSION_KEYS = [
   "dashboard",
@@ -16,12 +18,30 @@ export const PERMISSION_KEYS = [
 
 export type PermissionKey = (typeof PERMISSION_KEYS)[number];
 
+/**
+ * Live authorization context attached to each request. Always derived from the
+ * database (or the legacy owner fallback) on every request — never trusted
+ * blindly from the token — so permission changes and account deletions take
+ * effect immediately.
+ */
 export interface AuthPayload {
   username: string;
   role: string;
   permissions: string[];
   name: string | null;
 }
+
+/**
+ * Minimal identity claims embedded in the signed token. Authorization data
+ * (role/permissions) is intentionally NOT trusted from here.
+ */
+export interface TokenClaims {
+  sub: number | null; // admin_accounts.id; null for the legacy owner
+  username: string;
+  legacy?: boolean;
+}
+
+const LEGACY_USERNAME = "freshmood";
 
 function getSecret(): string {
   const secret = process.env.JWT_SECRET;
@@ -31,23 +51,20 @@ function getSecret(): string {
   return secret;
 }
 
-export function signToken(payload: AuthPayload): string {
-  return jwt.sign(payload, getSecret(), { expiresIn: "30d" });
+export function signToken(claims: TokenClaims): string {
+  return jwt.sign(claims, getSecret(), { expiresIn: "30d" });
 }
 
-export function verifyToken(token: string): AuthPayload | null {
+export function verifyToken(token: string): TokenClaims | null {
   try {
     const decoded = jwt.verify(token, getSecret()) as Record<string, unknown>;
-    if (typeof decoded.username !== "string" || typeof decoded.role !== "string") {
+    if (typeof decoded.username !== "string") {
       return null;
     }
     return {
+      sub: typeof decoded.sub === "number" ? decoded.sub : null,
       username: decoded.username,
-      role: decoded.role,
-      permissions: Array.isArray(decoded.permissions)
-        ? (decoded.permissions as string[])
-        : [],
-      name: typeof decoded.name === "string" ? decoded.name : null,
+      legacy: decoded.legacy === true,
     };
   } catch {
     return null;
@@ -69,14 +86,60 @@ export function hasPermission(auth: AuthPayload, key: string): boolean {
 }
 
 /**
- * Populates req.auth from a Bearer token when present and valid.
- * Never rejects on its own — public endpoints stay accessible.
+ * Populates req.auth from a Bearer token when present and valid. Reloads the
+ * account from the database on every request so revoked/edited accounts lose
+ * access instantly. Never rejects on its own — public endpoints stay accessible.
  */
-export function authMiddleware(req: Request, _res: Response, next: NextFunction): void {
-  const header = req.headers.authorization ?? "";
-  const token = header.startsWith("Bearer ") ? header.slice(7).trim() : "";
-  req.auth = token ? verifyToken(token) : null;
-  next();
+export async function authMiddleware(req: Request, _res: Response, next: NextFunction): Promise<void> {
+  try {
+    const header = req.headers.authorization ?? "";
+    const token = header.startsWith("Bearer ") ? header.slice(7).trim() : "";
+    if (!token) {
+      req.auth = null;
+      return next();
+    }
+    const claims = verifyToken(token);
+    if (!claims) {
+      req.auth = null;
+      return next();
+    }
+    // Legacy hardcoded owner has no database row.
+    if (claims.legacy && claims.username === LEGACY_USERNAME) {
+      req.auth = {
+        username: LEGACY_USERNAME,
+        role: "owner",
+        permissions: [...PERMISSION_KEYS],
+        name: null,
+      };
+      return next();
+    }
+    if (claims.sub == null) {
+      req.auth = null;
+      return next();
+    }
+    const [account] = await db
+      .select()
+      .from(adminAccountsTable)
+      .where(eq(adminAccountsTable.id, claims.sub))
+      .limit(1);
+    if (!account) {
+      // Account was deleted — token is no longer valid.
+      req.auth = null;
+      return next();
+    }
+    const isOwner = account.role === "owner";
+    req.auth = {
+      username: account.username,
+      role: account.role,
+      permissions: isOwner ? [...PERMISSION_KEYS] : account.permissions ?? [],
+      name: account.name,
+    };
+    return next();
+  } catch {
+    // Fail closed: any error means no authenticated context.
+    req.auth = null;
+    return next();
+  }
 }
 
 /**
