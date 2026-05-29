@@ -45,11 +45,14 @@ export default function CustomerMenu() {
     { query: { queryKey: getListMenuItemsQueryKey({ available: true }) } }
   );
 
-  const filteredItems = menuItems?.filter(item => {
+  const safeMenuItems = Array.isArray(menuItems) ? menuItems : [];
+  const safeCategories = Array.isArray(categories) ? categories : [];
+
+  const filteredItems = safeMenuItems.filter(item => {
     const matchesSearch = item.name.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesCategory = activeCategory === null || item.categoryId === activeCategory;
     return matchesSearch && matchesCategory;
-  }) || [];
+  });
 
   const getItemQuantity = (id: number) => {
     const item = items.find(i => i.menuItem.id === id);
@@ -132,7 +135,7 @@ export default function CustomerMenu() {
             >
               All Items
             </Button>
-            {categories?.map((cat) => (
+            {safeCategories.map((cat) => (
               <Button
                 key={cat.id}
                 variant={activeCategory === cat.id ? "default" : "secondary"}
@@ -156,7 +159,7 @@ export default function CustomerMenu() {
               Our Best Sellers
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {menuItems?.filter(i => i.isBestSeller).slice(0, 4).map(item => (
+              {safeMenuItems.filter(i => i.isBestSeller).slice(0, 4).map(item => (
                 // Reusing the same card logic below
                 <ItemCard 
                   key={item.id} 
@@ -170,7 +173,7 @@ export default function CustomerMenu() {
           </div>
         )}
 
-        <h2 className="text-xl font-bold mb-4">{activeCategory ? categories?.find(c => c.id === activeCategory)?.name : 'Menu'}</h2>
+        <h2 className="text-xl font-bold mb-4">{activeCategory ? safeCategories.find(c => c.id === activeCategory)?.name : 'Menu'}</h2>
         
         {filteredItems.length === 0 ? (
           <div className="text-center py-20">
