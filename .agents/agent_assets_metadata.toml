@@ -1,5 +1,4 @@
 uploads = []
-outputs = []
 
 [[generated]]
 id = "dWM8qIwqNIkZGZbmDJv1a"
@@ -222,3 +221,9 @@ id = "wi2ubcjt9LGn98bP87cCT"
 uri = "file://artifacts/freshmood/public/images/menu/peanut-butter-latte.png"
 type = "image"
 title = "generated_image"
+
+[[outputs]]
+id = "-igFzoLxYvk346vyL1MJA"
+uri = "file://backups/freshmood-database-backup-20260529.sql.gz"
+type = "unspecified"
+title = "FreshMood Database Backup (29 May 2026)"
