@@ -39,11 +39,14 @@ const NAME_KEY = "freshmood-name";
 const PERMISSIONS_KEY = "freshmood-permissions";
 
 // Page-backed routes in priority order, each mapped to its permission key.
+// A kasir-only account has no dedicated page but can view the Orders page, so
+// "kasir" also resolves to /admin/orders to avoid stranding the user on login.
 const PAGE_ROUTES: { href: string; perm: string }[] = [
   { href: "/admin/dashboard", perm: "dashboard" },
   { href: "/admin/kitchen", perm: "kitchen" },
   { href: "/admin/menu", perm: "menu" },
   { href: "/admin/orders", perm: "orders" },
+  { href: "/admin/orders", perm: "kasir" },
   { href: "/admin/leaderboard", perm: "leaderboard" },
   { href: "/admin/payments", perm: "payments" },
   { href: "/admin/employees", perm: "employees" },

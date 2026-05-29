@@ -56,7 +56,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
     { href: "/admin/dashboard", label: "Dashboard", icon: LayoutDashboard, perm: "dashboard" },
     { href: "/admin/kitchen",   label: "Kitchen",   icon: ChefHat, perm: "kitchen" },
     { href: "/admin/menu",      label: "Menu",       icon: MenuSquare, perm: "menu" },
-    { href: "/admin/orders",    label: "Orders",     icon: ListOrdered, perm: "orders" },
+    { href: "/admin/orders",    label: "Orders",     icon: ListOrdered, perm: "orders", anyPerm: ["orders", "kasir"] },
     { href: "/admin/leaderboard", label: "Leaderboard", icon: Trophy, perm: "leaderboard" },
     { href: "/admin/payments",  label: "Payments",   icon: CreditCard, perm: "payments" },
     { href: "/admin/employees", label: "Karyawan",   icon: Users, perm: "employees" },
@@ -65,7 +65,11 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
   ];
 
   const navItems = allNavItems.filter((item) =>
-    item.perm === "__owner__" ? isOwner : hasPermission(item.perm)
+    item.perm === "__owner__"
+      ? isOwner
+      : item.anyPerm
+        ? item.anyPerm.some((p) => hasPermission(p))
+        : hasPermission(item.perm)
   );
 
   // Cashier switching/management is only for users with the kasir or employees

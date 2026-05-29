@@ -8,6 +8,7 @@ import {
   getGetActiveCashierQueryKey,
 } from "@workspace/api-client-react";
 import { useActiveCashier } from "@/hooks/use-cashier";
+import { useAuth } from "@/hooks/use-auth";
 import {
   Dialog,
   DialogContent,
@@ -36,6 +37,10 @@ interface SwitchCashierDialogProps {
 export default function SwitchCashierDialog({ open, onOpenChange }: SwitchCashierDialogProps) {
   const queryClient = useQueryClient();
   const { toast } = useToast();
+  const { isOwner, hasPermission } = useAuth();
+  // Editing the roster (add/delete cashiers) requires the employees area; a
+  // kasir-only user can still switch who is on duty. The server enforces this too.
+  const canManageRoster = isOwner || hasPermission("employees");
   const { activeCashier, switchCashier, isSwitching } = useActiveCashier();
 
   const { data: cashiers = [], isLoading } = useListCashiers({
@@ -170,21 +175,22 @@ export default function SwitchCashierDialog({ open, onOpenChange }: SwitchCashie
                       <Loader2 className="w-4 h-4 animate-spin shrink-0" />
                     ) : isActive ? (
                       <CheckCircle2 className="w-4 h-4 shrink-0" />
-                    ) : (
+                    ) : canManageRoster ? (
                       <button
                         onClick={(e) => { e.stopPropagation(); handleDelete(cashier.id, cashier.name); }}
                         className="text-muted-foreground hover:text-destructive transition-colors p-0.5 shrink-0 opacity-50 hover:opacity-100"
                       >
                         <Trash2 className="w-3.5 h-3.5" />
                       </button>
-                    )}
+                    ) : null}
                   </div>
                 );
               })
             )}
           </div>
 
-          {/* Add new cashier */}
+          {/* Add new cashier — roster editing requires the employees area */}
+          {canManageRoster && (
           <form onSubmit={handleCreate} className="flex gap-2 pt-1 border-t">
             <Input
               placeholder="Nama kasir baru..."
@@ -205,6 +211,7 @@ export default function SwitchCashierDialog({ open, onOpenChange }: SwitchCashie
               )}
             </Button>
           </form>
+          )}
         </div>
       </DialogContent>
     </Dialog>

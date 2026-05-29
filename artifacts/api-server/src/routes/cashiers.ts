@@ -2,16 +2,21 @@ import { Router, type IRouter } from "express";
 import { db } from "@workspace/db";
 import { cashiersTable } from "@workspace/db";
 import { eq } from "drizzle-orm";
-import { requireAnyPermission } from "../lib/auth";
+import { requireAnyPermission, requirePermission } from "../lib/auth";
 
 const router: IRouter = Router();
 
-// Cashier management is shared by the Karyawan (employees) page and the
-// cashier-switch dialog used during the kasir flow, so it requires either the
-// employees or kasir permission (owner always passes).
-const requireCashierAccess = requireAnyPermission(["employees", "kasir"]);
+// Viewing the cashier list and switching who is on duty is part of the kasir
+// flow (the switch-cashier dialog) as well as the Karyawan page, so it requires
+// either the kasir or employees permission (owner always passes).
+const requireCashierRead = requireAnyPermission(["employees", "kasir"]);
 
-router.get("/admin/cashiers", requireCashierAccess, async (_req, res): Promise<void> => {
+// Creating and deleting cashier records is an employee-management action, so it
+// requires the employees permission (owner always passes). A kasir-only user
+// can switch the active cashier but cannot edit the roster.
+const requireCashierManage = requirePermission("employees");
+
+router.get("/admin/cashiers", requireCashierRead, async (_req, res): Promise<void> => {
   const cashiers = await db.select().from(cashiersTable).orderBy(cashiersTable.createdAt);
   res.json(cashiers);
 });
@@ -26,7 +31,7 @@ router.get("/admin/cashiers/active", async (_req, res): Promise<void> => {
   res.json(active[0] ?? null);
 });
 
-router.post("/admin/cashiers/activate", requireCashierAccess, async (req, res): Promise<void> => {
+router.post("/admin/cashiers/activate", requireCashierRead, async (req, res): Promise<void> => {
   const { cashierId } = req.body ?? {};
   await db.update(cashiersTable).set({ isActive: false });
   if (cashierId != null) {
@@ -45,7 +50,7 @@ router.post("/admin/cashiers/activate", requireCashierAccess, async (req, res): 
   res.json(null);
 });
 
-router.post("/admin/cashiers", requireCashierAccess, async (req, res): Promise<void> => {
+router.post("/admin/cashiers", requireCashierManage, async (req, res): Promise<void> => {
   const name = req.body?.name?.trim();
   if (!name) {
     res.status(400).json({ error: "Nama kasir wajib diisi" });
@@ -58,7 +63,7 @@ router.post("/admin/cashiers", requireCashierAccess, async (req, res): Promise<v
   res.json(cashier);
 });
 
-router.delete("/admin/cashiers/:id", requireCashierAccess, async (req, res): Promise<void> => {
+router.delete("/admin/cashiers/:id", requireCashierManage, async (req, res): Promise<void> => {
   const id = Number(req.params.id);
   await db.update(cashiersTable).set({ isActive: false }).where(eq(cashiersTable.id, id));
   await db.delete(cashiersTable).where(eq(cashiersTable.id, id));

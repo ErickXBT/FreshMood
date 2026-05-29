@@ -63,17 +63,24 @@ function Home() {
 
 interface ProtectedRouteProps {
   permission?: string;
+  anyPermission?: string[];
   ownerOnly?: boolean;
   children: ReactNode;
 }
 
-function ProtectedRoute({ permission, ownerOnly, children }: ProtectedRouteProps) {
+function ProtectedRoute({ permission, anyPermission, ownerOnly, children }: ProtectedRouteProps) {
   const { isAuthenticated, isOwner, hasPermission, getDefaultRoute } = useAuth();
   const [, setLocation] = useLocation();
 
   const allowed =
     isAuthenticated &&
-    (ownerOnly ? isOwner : permission ? hasPermission(permission) : true);
+    (ownerOnly
+      ? isOwner
+      : anyPermission
+        ? anyPermission.some((p) => hasPermission(p))
+        : permission
+          ? hasPermission(permission)
+          : true);
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -170,7 +177,7 @@ function Router() {
         <ProtectedRoute permission="menu"><AdminMenu /></ProtectedRoute>
       </Route>
       <Route path="/admin/orders">
-        <ProtectedRoute permission="orders"><AdminOrders /></ProtectedRoute>
+        <ProtectedRoute anyPermission={["orders", "kasir"]}><AdminOrders /></ProtectedRoute>
       </Route>
       <Route path="/admin/leaderboard">
         <ProtectedRoute permission="leaderboard"><AdminLeaderboard /></ProtectedRoute>
