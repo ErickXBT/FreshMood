@@ -500,14 +500,27 @@ paths:
                 items:
                   $ref: "#/components/schemas/ItemSale"
 
+  /admin/me:
+    get:
+      operationId: getAdminMe
+      tags: [admin]
+      summary: Get the current authenticated admin's role and permissions
+      responses:
+        "200":
+          description: Current admin context
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminMe"
+
   /admin/monthly-revenue:
     get:
       operationId: getMonthlyRevenue
       tags: [admin]
-      summary: Get revenue and order count aggregated by month
+      summary: Get the list of months that have order data
       responses:
         "200":
-          description: Monthly revenue list
+          description: Available months list
           content:
             application/json:
               schema:
@@ -1177,14 +1190,25 @@ components:
 
     MonthlyRevenue:
       type: object
-      required: [month, revenue, orderCount]
+      required: [month]
       properties:
         month:
           type: string
-        revenue:
-          type: number
-        orderCount:
-          type: integer
+
+    AdminMe:
+      type: object
+      required: [username, role, permissions]
+      properties:
+        username:
+          type: string
+        role:
+          type: string
+        permissions:
+          type: array
+          items:
+            type: string
+        name:
+          type: ["string", "null"]
 
     PaymentMethodSummary:
       type: object

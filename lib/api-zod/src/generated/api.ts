@@ -486,12 +486,21 @@ export const GetItemSalesResponse = zod.array(GetItemSalesResponseItem)
 
 
 /**
- * @summary Get revenue and order count aggregated by month
+ * @summary Get the current authenticated admin's role and permissions
+ */
+export const GetAdminMeResponse = zod.object({
+  "username": zod.string(),
+  "role": zod.string(),
+  "permissions": zod.array(zod.string()),
+  "name": zod.string().nullish()
+})
+
+
+/**
+ * @summary Get the list of months that have order data
  */
 export const GetMonthlyRevenueResponseItem = zod.object({
-  "month": zod.string(),
-  "revenue": zod.number(),
-  "orderCount": zod.number()
+  "month": zod.string()
 })
 export const GetMonthlyRevenueResponse = zod.array(GetMonthlyRevenueResponseItem)
 

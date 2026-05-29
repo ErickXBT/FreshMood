@@ -25,6 +25,7 @@ import type {
   AdminForgotPasswordInput,
   AdminLoginInput,
   AdminLoginResult,
+  AdminMe,
   AdminRegisterInput,
   AdminResetData200,
   AdminResetDataInput,
@@ -1918,6 +1919,83 @@ export function useGetItemSales<TData = Awaited<ReturnType<typeof getItemSales>>
 
 
 
+export const getGetAdminMeUrl = () => {
+
+
+
+
+  return `/api/admin/me`
+}
+
+/**
+ * @summary Get the current authenticated admin's role and permissions
+ */
+export const getAdminMe = async ( options?: RequestInit): Promise<AdminMe> => {
+
+  return customFetch<AdminMe>(getGetAdminMeUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetAdminMeQueryKey = () => {
+    return [
+    `/api/admin/me`
+    ] as const;
+    }
+
+
+export const getGetAdminMeQueryOptions = <TData = Awaited<ReturnType<typeof getAdminMe>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getAdminMe>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetAdminMeQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getAdminMe>>> = ({ signal }) => getAdminMe({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getAdminMe>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetAdminMeQueryResult = NonNullable<Awaited<ReturnType<typeof getAdminMe>>>
+export type GetAdminMeQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Get the current authenticated admin's role and permissions
+ */
+
+export function useGetAdminMe<TData = Awaited<ReturnType<typeof getAdminMe>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getAdminMe>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetAdminMeQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
 export const getGetMonthlyRevenueUrl = () => {
 
 
@@ -1927,7 +2005,7 @@ export const getGetMonthlyRevenueUrl = () => {
 }
 
 /**
- * @summary Get revenue and order count aggregated by month
+ * @summary Get the list of months that have order data
  */
 export const getMonthlyRevenue = async ( options?: RequestInit): Promise<MonthlyRevenue[]> => {
 
@@ -1974,7 +2052,7 @@ export type GetMonthlyRevenueQueryError = ErrorType<unknown>
 
 
 /**
- * @summary Get revenue and order count aggregated by month
+ * @summary Get the list of months that have order data
  */
 
 export function useGetMonthlyRevenue<TData = Awaited<ReturnType<typeof getMonthlyRevenue>>, TError = ErrorType<unknown>>(

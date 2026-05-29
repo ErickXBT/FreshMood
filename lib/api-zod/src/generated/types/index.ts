@@ -11,6 +11,7 @@ export * from './adminForgotPassword200';
 export * from './adminForgotPasswordInput';
 export * from './adminLoginInput';
 export * from './adminLoginResult';
+export * from './adminMe';
 export * from './adminRegisterInput';
 export * from './adminResetData200';
 export * from './adminResetDataInput';

@@ -256,8 +256,14 @@ export interface ItemSale {
 
 export interface MonthlyRevenue {
   month: string;
-  revenue: number;
-  orderCount: number;
+}
+
+export interface AdminMe {
+  username: string;
+  role: string;
+  permissions: string[];
+  /** @nullable */
+  name?: string | null;
 }
 
 export interface PaymentMethodSummary {

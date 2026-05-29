@@ -6,6 +6,10 @@
  * OpenAPI spec version: 0.1.0
  */
 
-export interface MonthlyRevenue {
-  month: string;
+export interface AdminMe {
+  username: string;
+  role: string;
+  permissions: string[];
+  /** @nullable */
+  name?: string | null;
 }

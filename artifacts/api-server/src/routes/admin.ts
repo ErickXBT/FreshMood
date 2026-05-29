@@ -600,12 +600,24 @@ router.get("/admin/leaderboard", requirePermission("leaderboard"), async (req, r
   res.json(ranked);
 });
 
+router.get("/admin/me", requireAuth, async (req, res): Promise<void> => {
+  const auth = req.auth!;
+  res.json({
+    username: auth.username,
+    role: auth.role,
+    permissions: auth.permissions,
+    name: auth.name,
+  });
+});
+
+// Returns only the list of months that have order data, used to populate the
+// month selector shared across the dashboard, payments and leaderboard pages.
+// Intentionally exposes NO revenue figures so it can be shared by any logged-in
+// staff regardless of their dashboard/payments permissions.
 router.get("/admin/monthly-revenue", requireAuth, async (_req, res): Promise<void> => {
   const rows = await db
     .select({
       month: sql<string>`to_char(${ordersTable.createdAt}, 'YYYY-MM')`,
-      revenue: sql<number>`sum(${ordersTable.total})::float`,
-      orderCount: sql<number>`count(*)::int`,
     })
     .from(ordersTable)
     .groupBy(sql`to_char(${ordersTable.createdAt}, 'YYYY-MM')`)

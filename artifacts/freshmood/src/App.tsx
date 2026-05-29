@@ -1,7 +1,7 @@
 import { Switch, Route, Router as WouterRouter, useLocation } from "wouter";
 import { useEffect, ReactNode } from "react";
 import { QueryClient, QueryClientProvider, MutationCache, QueryCache } from "@tanstack/react-query";
-import { ApiError } from "@workspace/api-client-react";
+import { ApiError, useGetAdminMe, getAdminMe, getGetAdminMeQueryKey } from "@workspace/api-client-react";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { ThemeProvider } from "@/hooks/use-theme";
@@ -26,10 +26,15 @@ import Checkout from "@/pages/customer/checkout";
 import OrderStatusPage from "@/pages/customer/order-status";
 
 let handleAuthExpired: (() => void) | null = null;
+let handleForbidden: (() => void) | null = null;
 
 function onApiError(error: unknown) {
-  if (error instanceof ApiError && error.status === 401) {
-    handleAuthExpired?.();
+  if (error instanceof ApiError) {
+    if (error.status === 401) {
+      handleAuthExpired?.();
+    } else if (error.status === 403) {
+      handleForbidden?.();
+    }
   }
 }
 
@@ -82,9 +87,35 @@ function ProtectedRoute({ permission, ownerOnly, children }: ProtectedRouteProps
   return <>{children}</>;
 }
 
-function AuthExpiredBridge() {
-  const { logout, isAuthenticated } = useAuth();
+function AuthBridge() {
+  const { logout, isAuthenticated, syncFromServer } = useAuth();
   const [, setLocation] = useLocation();
+
+  // Keep the locally cached role/permissions in sync with the server so that
+  // owner-side permission changes take effect for staff without re-login. The
+  // per-route <ProtectedRoute> guard then redirects away from any area that is
+  // no longer permitted once these fresh permissions land.
+  const { data: me } = useGetAdminMe({
+    query: {
+      queryKey: getGetAdminMeQueryKey(),
+      enabled: isAuthenticated,
+      refetchOnWindowFocus: true,
+      refetchOnMount: true,
+      staleTime: 0,
+      retry: false,
+    },
+  });
+
+  useEffect(() => {
+    if (me) {
+      syncFromServer({
+        username: me.username,
+        role: me.role,
+        permissions: me.permissions,
+        name: me.name,
+      });
+    }
+  }, [me, syncFromServer]);
 
   useEffect(() => {
     handleAuthExpired = () => {
@@ -92,10 +123,27 @@ function AuthExpiredBridge() {
       logout();
       setLocation("/admin/login");
     };
+    handleForbidden = () => {
+      if (!isAuthenticated) return;
+      // A 403 means our cached permissions are stale — re-sync from server.
+      void getAdminMe()
+        .then((fresh) =>
+          syncFromServer({
+            username: fresh.username,
+            role: fresh.role,
+            permissions: fresh.permissions,
+            name: fresh.name,
+          }),
+        )
+        .catch(() => {
+          /* 401 path handled separately */
+        });
+    };
     return () => {
       handleAuthExpired = null;
+      handleForbidden = null;
     };
-  }, [logout, setLocation, isAuthenticated]);
+  }, [logout, setLocation, isAuthenticated, syncFromServer]);
 
   return null;
 }
@@ -153,7 +201,7 @@ function App() {
           <CartProvider>
             <TooltipProvider>
               <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
-                <AuthExpiredBridge />
+                <AuthBridge />
                 <Router />
               </WouterRouter>
               <Toaster />

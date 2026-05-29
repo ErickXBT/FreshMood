@@ -8,6 +8,13 @@ export interface LoginData {
   name?: string | null;
 }
 
+export interface AuthSnapshot {
+  username: string;
+  role: string;
+  permissions: string[];
+  name?: string | null;
+}
+
 interface AuthContextType {
   token: string | null;
   username: string | null;
@@ -16,6 +23,7 @@ interface AuthContextType {
   permissions: string[];
   login: (data: LoginData) => void;
   logout: () => void;
+  syncFromServer: (data: AuthSnapshot) => void;
   isAuthenticated: boolean;
   isOwner: boolean;
   hasPermission: (key: string) => boolean;
@@ -77,6 +85,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     localStorage.setItem(PERMISSIONS_KEY, JSON.stringify(data.permissions));
   };
 
+  const syncFromServer = (data: AuthSnapshot) => {
+    setUsername(data.username);
+    setRole(data.role);
+    setName(data.name ?? null);
+    setPermissions(data.permissions);
+    localStorage.setItem(USERNAME_KEY, data.username);
+    localStorage.setItem(ROLE_KEY, data.role);
+    if (data.name) {
+      localStorage.setItem(NAME_KEY, data.name);
+    } else {
+      localStorage.removeItem(NAME_KEY);
+    }
+    localStorage.setItem(PERMISSIONS_KEY, JSON.stringify(data.permissions));
+  };
+
   const logout = () => {
     setToken(null);
     setUsername(null);
@@ -113,6 +136,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         permissions,
         login,
         logout,
+        syncFromServer,
         isAuthenticated: !!token,
         isOwner,
         hasPermission,
