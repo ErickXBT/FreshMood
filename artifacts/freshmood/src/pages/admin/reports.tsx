@@ -183,8 +183,8 @@ export default function AdminReports() {
                 <CardTitle className="text-base md:text-lg">Grafik Pendapatan — {periodTitle(period)}</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="h-[240px] md:h-[320px] w-full">
-                  <ResponsiveContainer width="100%" height="100%">
+                <div className="w-full">
+                  <ResponsiveContainer width="100%" height={300}>
                     <BarChart data={chartData} margin={{ left: -10 }}>
                       <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" />
                       <XAxis dataKey="name" stroke="hsl(var(--muted-foreground))" fontSize={11} tickLine={false} axisLine={false} interval="preserveStartEnd" />
